@@ -1,0 +1,30 @@
+{
+  "por_tipo": {
+    "electrico": [
+      {"id": "rayo", "nombre": "Rayo", "poder": 90, "tipo": "electrico"},
+      {"id": "impactrueno", "nombre": "Impactrueno", "poder": 40, "tipo": "electrico"}
+    ],
+    "fuego": [
+      {"id": "llama", "nombre": "Llamarada", "poder": 110, "tipo": "fuego"},
+      {"id": "ascuas", "nombre": "Ascuas", "poder": 40, "tipo": "fuego"}
+    ],
+    "agua": [
+      {"id": "hidrobomba", "nombre": "Hidrobomba", "poder": 110, "tipo": "agua"},
+      {"id": "pistola_agua", "nombre": "Pistola agua", "poder": 40, "tipo": "agua"}
+    ],
+    "planta": [
+      {"id": "rayo_solar", "nombre": "Rayo solar", "poder": 120, "tipo": "planta"},
+      {"id": "latigo_cepa", "nombre": "Látigo cepa", "poder": 45, "tipo": "planta"}
+    ],
+    "normal": [
+      {"id": "ataque_rapido", "nombre": "Ataque rápido", "poder": 40, "tipo": "normal"},
+      {"id": "placaje", "nombre": "Placaje", "poder": 35, "tipo": "normal"}
+    ]
+  },
+  "globales": [
+    {"id": "Destructor", "nombre": "Destructor", "poder": 80, "tipo": "normal"},
+    {"id": "Golpe_aereo", "nombre": "Golpe aéreo", "poder": 60, "tipo": "volador"},
+    {"id": "Terremoto", "nombre": "Terremoto", "poder": 100, "tipo": "tierra"},
+    {"id": "Hiperrayo", "nombre": "Hiperrayo", "poder": 150, "tipo": "normal"}
+  ]
+}
