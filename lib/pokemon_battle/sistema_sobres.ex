@@ -1,13 +1,24 @@
 defmodule PokemonBattle.SistemaSobres do
   @moduledoc """
-  Sistema de sobres: tienda, compra con cola FIFO por tipo de sobre,
-  apertura con rarezas según `tienda.json` y estadísticas §3.2.
+  **Tienda de sobres** y apertura de paquetes.
+
+  - La compra descuenta monedas, valida el tipo de sobre contra `tienda.json` y **encola** el sobre (FIFO).
+  - Al abrir, se saca el siguiente sobre de la cola, se tiran probabilidades de rareza según ese tipo
+    y se generan 3 instancias nuevas con stats y 4 movimientos acordes a la especie y al catálogo de movimientos.
+  Las instancias se guardan en persistencia y se añaden al inventario del jugador.
   """
 
   alias PokemonBattle.Persistencia
 
+  @doc """
+  Devuelve `{:ok, catálogo}` con el contenido de `tienda.json` (precios y pesos de rareza por clave de sobre).
+  """
   def tienda(), do: {:ok, Persistencia.catalogo_tienda()}
 
+  @doc """
+  Compra un sobre del tipo indicado (`tipo` o `sobre_basico`, etc.). Cobra el precio, hace `push` en la cola de sobres
+  y devuelve `{:ok, %{sobre: clave, precio: ...}}` o error si el sobre no existe o no hay saldo.
+  """
   def comprar_sobre(usuario, tipo) do
     usuario = to_string(usuario)
     clave = normalizar_tipo_sobre(tipo)
@@ -27,6 +38,10 @@ defmodule PokemonBattle.SistemaSobres do
     end
   end
 
+  @doc """
+  Abre el **siguiente** sobre en cola para el usuario (el parámetro extra se ignora; reservado por compatibilidad).
+  Genera 3 Pokémon, los persiste y devuelve `{:ok, %{pokemon_ids: ids, pokemon: instancias}}` o error si la cola está vacía.
+  """
   def abrir_sobre(usuario, _id_o_ultimo \\ "ultimo") do
     usuario = to_string(usuario)
 

@@ -1,13 +1,13 @@
 defmodule PokemonBattle.Batalla do
   @moduledoc """
-  Sala de batalla (GenServer) para 2 entrenadores.
+  **Sala de batalla** (`GenServer`): una partida entre dos entrenadores con equipos cargados desde persistencia.
 
-  - Gestiona turnos "simultáneos": espera una acción de cada jugador y
-    luego resuelve según la velocidad del Pokémon activo.
-  - Acciones soportadas:
-    - `ataque <movimiento>`
-    - `cambiar <id>`
-    - `rendirse`
+  - Turnos **simultáneos**: se acumula una acción por jugador; al completarse ambas, el orden de ejecución
+    lo marca la **velocidad** del Pokémon activo de cada uno.
+  - Acciones: ataque (id de movimiento), cambio de Pokémon o rendición.
+  - Al terminar, actualiza victorias/derrotas, monedas y puede persistir cambios de HP en las instancias.
+
+  La API pública recibe el `pid` del proceso de sala devuelto por el gestor de salas.
   """
 
   use GenServer
@@ -36,30 +36,49 @@ defmodule PokemonBattle.Batalla do
   # API pública
   # =========================
 
+  @doc """
+  Une al segundo jugador a la sala. Opcionalmente monitoriza `caller_pid` para cerrar si cae la sesión de consola.
+  """
   def unirse(pid, usuario, caller_pid \\ nil) do
     GenServer.call(pid, {:unirse, usuario, caller_pid})
   end
 
+  @doc """
+  Arranca el combate: valida equipos activos de ambos jugadores y entra en el bucle de rondas.
+  """
   def iniciar(pid, usuario_iniciador) do
     GenServer.call(pid, {:iniciar, usuario_iniciador})
   end
 
+  @doc """
+  Encola ataque del `usuario` con el movimiento indicado (debe ser legal para su Pokémon activo).
+  """
   def ataque(pid, usuario, movimiento_id) do
     GenServer.call(pid, {:ataque, usuario, movimiento_id})
   end
 
+  @doc """
+  Encola cambio de Pokémon activo del `usuario` hacia la instancia `pokemon_id` de su equipo en batalla.
+  """
   def cambiar(pid, usuario, pokemon_id) do
     GenServer.call(pid, {:cambiar, usuario, pokemon_id})
   end
 
+  @doc """
+  El `usuario` abandona la batalla; el oponente gana y se aplican recompensas y persistencia.
+  """
   def rendirse(pid, usuario) do
     GenServer.call(pid, {:rendirse, usuario})
   end
 
-  @doc "Obtiene el último orden de resolución por velocidad (para tests)."
+  @doc """
+  Devuelve la lista ordenada de quién actuó primero en la última ronda resuelta (por velocidad). Útil en tests.
+  """
   def obtener_ultimo_orden(pid), do: GenServer.call(pid, :obtener_ultimo_orden)
 
-  @doc "Obtiene el estado resumido de la batalla (para tests/debug)."
+  @doc """
+  Devuelve un mapa con el estado actual de la batalla (jugadores, HP, turno, etc.) para depuración o interfaz.
+  """
   def obtener_estado(pid), do: GenServer.call(pid, :obtener_estado)
 
   # =========================

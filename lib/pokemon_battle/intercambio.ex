@@ -1,12 +1,10 @@
 defmodule PokemonBattle.Intercambio do
   @moduledoc """
-  Sala de intercambio (GenServer) entre 2 entrenadores.
+  **Sala de intercambio** (`GenServer`): dos entrenadores acuerdan intercambiar una instancia cada uno.
 
-  Reglas:
-  - 2 jugadores
-  - tiempo real con timeout
-  - si uno sale (proceso monitoreado cae) => cancelar
-  - el intercambio ocurre al confirmar ambos
+  Flujo típico: crear sala → unirse el otro → cada uno **ofrece** un Pokémon de su inventario → ambos **confirman**.
+  Si el tiempo global expira, alguien cancela o cae el proceso cliente monitorizado, la sala se cancela sin mover datos.
+  Al completarse, se actualizan inventarios en `Persistencia`; el campo `dueño_original` de cada instancia **no** se altera.
   """
 
   use GenServer
@@ -28,10 +26,19 @@ defmodule PokemonBattle.Intercambio do
   # API pública
   # =========================
 
+  @doc "Une al `usuario` a la sala (segundo jugador). Opcional `caller_pid` para monitorizar la sesión."
   def unirse(pid, usuario, caller_pid \\ nil), do: GenServer.call(pid, {:unirse, usuario, caller_pid})
+
+  @doc "Registra la oferta del `usuario`: id de instancia de Pokémon que entrega."
   def ofrecer_pokemon(pid, usuario, pokemon_id), do: GenServer.call(pid, {:ofrecer_pokemon, usuario, pokemon_id})
+
+  @doc "Confirma el intercambio por parte del `usuario`. Con dos confirmaciones y ofertas válidas se ejecuta el swap."
   def confirmar_intercambio(pid, usuario), do: GenServer.call(pid, {:confirmar_intercambio, usuario})
+
+  @doc "Cancela el intercambio desde el `usuario`."
   def cancelar_intercambio(pid, usuario), do: GenServer.call(pid, {:cancelar_intercambio, usuario})
+
+  @doc "Estado actual de la sala (jugadores, ofertas, confirmaciones, fase)."
   def obtener_estado(pid), do: GenServer.call(pid, :obtener_estado)
 
   # =========================

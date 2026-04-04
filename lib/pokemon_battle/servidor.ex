@@ -1,13 +1,12 @@
 defmodule PokemonBattle.Servidor do
   @moduledoc """
-  Servidor de consola (GenServer):
+  **Interfaz de consola** del juego (`GenServer` registrado como `PokemonBattle.Servidor`).
 
-  - Mantiene el usuario actualmente logueado.
-  - Interpreta comandos de texto como los solicitados.
-  - Traduce cada comando a llamadas reales OTP a:
-    - `PokemonBattle.GestorEntrenadores`
-    - `PokemonBattle.SistemaSobres`
-    - `PokemonBattle.GestorSalas`
+  Mantiene sesión: usuario logueado, sala de batalla o intercambio “actual” para atajos de comandos.
+  Cada línea de texto se tokeniza y se traduce a llamadas a `GestorEntrenadores`, `SistemaSobres`, `GestorSalas` y `Persistencia`.
+  Las respuestas son cadenas en español listas para mostrar al jugador.
+
+  Para dos jugadores en la misma consola `iex`, conviene usar `GestorSalas.ataque/3` pasando el nombre de usuario explícito.
   """
 
   use GenServer
@@ -25,6 +24,7 @@ defmodule PokemonBattle.Servidor do
   # API
   # =========================
 
+  @doc "Arranca el proceso del servidor de consola con nombre registrado `PokemonBattle.Servidor`."
   def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, opts, name: __MODULE__)
 
   @doc """

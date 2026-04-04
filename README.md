@@ -19,6 +19,8 @@ Cumple el alcance típico de un proyecto académico de este tipo:
 
 Los detalles de fórmulas, tablas de tipos y reglas de sobres están implementados en `lib/pokemon_battle/` (por ejemplo `motor_combate.ex`, `sistema_sobres.ex`, `batalla.ex`).
 
+**Referencia de API (qué hace cada módulo y función pública):** consulta [`DOCUMENTACION.md`](DOCUMENTACION.md). En el código, los `@moduledoc` y `@doc` de los `.ex` repiten o amplían lo mismo en español.
+
 ---
 
 ## Requisitos
@@ -256,13 +258,30 @@ El directorio base se configura en `config/config.exs` (`:data_dir`).
 
 ---
 
-## Tests
+## Tests y verificación de requisitos
 
-```bash
+Comando estándar (en PowerShell, usa `;` entre órdenes si hace falta):
+
+```powershell
+Set-Location ruta\al\proyecto
 mix test
+# equivalente:
+mix proyecto.verify
 ```
 
-Cubren daño, orden por velocidad, sobres, monedas tras batalla, intercambio de inventarios, etc.
+Ambos ejecutan la misma suite ExUnit y sirven como verificación automática alineada con los requisitos de la tabla siguiente.
+
+| Requisito (resumen) | Cómo se verifica en código |
+|---------------------|----------------------------|
+| 1. Persistencia JSON | `test/pokemon_battle/persistencia_test.exs` (y flujos que escriben en `data_test/`) |
+| 2. Varias batallas en paralelo | `test/pokemon_battle/batalla_test.exs` — *“requisito: varias batallas en paralelo”* |
+| 3. Motor de combate (tipos, STAB, fórmula) | `test/pokemon_battle/motor_combate_test.exs` |
+| 4. Progresión (sobres, equipos, monedas) | `test/pokemon_battle/sobres_test.exs`, `batalla_test.exs` (economía al rendirse) |
+| 5. Intercambio en sala | `test/pokemon_battle/intercambio_test.exs` |
+| 6. Consola (`Servidor`) | `test/pokemon_battle/servidor_test.exs` |
+| 7. Distribución (2 nodos) | **Manual**: sección *Dos ventanas `iex`* + `GESTOR_SALAS_NODE` (no automatizable en ExUnit sin cluster dedicado) |
+
+Los tests usan el directorio `data_test/` (ver `config/test.exs`), no tu carpeta `data/` de desarrollo.
 
 ---
 

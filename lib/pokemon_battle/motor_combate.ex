@@ -91,6 +91,11 @@ defmodule PokemonBattle.MotorCombate do
     stab(tipo_mov, [tipo_atacante])
   end
 
+  @doc """
+  Aplica la fórmula de daño del enunciado con valores ya resueltos: `poder`, stats de ataque/defensa,
+  multiplicadores `efectividad` y `stab_val`, y factor aleatorio en rango típico 0.85–1.0.
+  La defensa mínima efectiva es 1 para evitar división por cero.
+  """
   @spec calcular_dano(integer(), integer(), integer(), float(), float(), float()) :: integer()
   def calcular_dano(poder, ataque, defensa, efectividad, stab_val, random_factor)
       when is_integer(poder) and is_integer(ataque) and is_integer(defensa) do
@@ -103,6 +108,9 @@ defmodule PokemonBattle.MotorCombate do
     max(dano_final, 1)
   end
 
+  @doc """
+  Devuelve un factor aleatorio uniforme entre `min` y `max` (por defecto 0.85 y 1.0) para la variación de daño.
+  """
   def random_factor(min \\ @default_random_min, max \\ @default_random_max)
       when is_float(min) and is_float(max) and min <= max do
     r = :rand.uniform()

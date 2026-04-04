@@ -47,3 +47,29 @@
 2026-04-04T00:28:55.194000Z [S-1002] Jugador cae. Ganador: ana_7396
 2026-04-04T00:28:55.477000Z [I-1001] Intercambio completo: inter_a_1603(71) <-> inter_b_1635(72)
 2026-04-04T00:48:54.399000Z [S-1001] Batalla iniciada por luis
+2026-04-04T01:28:22.420000Z [S-1001] Batalla iniciada por ana_1602
+2026-04-04T01:28:22.420000Z [S-1001] Ronda 1. Orden: ana_1602, luis_1634
+2026-04-04T01:28:22.420000Z [S-1001] ana_1602 usa rayo contra luis_1634. Daño: 15
+2026-04-04T01:28:22.420000Z [S-1001] luis_1634 usa hidrobomba contra ana_1602. Daño: 3
+2026-04-04T01:28:22.420000Z [S-1001] Jugador cae. Ganador: ana_1602
+2026-04-04T01:28:22.620000Z [S-1002] Batalla iniciada por victor_2212
+2026-04-04T01:28:22.620000Z [S-1002] perdedor_2244 se rinde. Ganador: victor_2212
+2026-04-04T01:28:22.887000Z [I-1001] Intercambio completo: inter_a_2308(84) <-> inter_b_2340(85)
+2026-04-04T01:33:31.142000Z [S-1001] Batalla iniciada por ana_101
+2026-04-04T01:33:31.156000Z [S-1001] Ronda 1. Orden: ana_101, luis_133
+2026-04-04T01:33:31.156000Z [S-1001] ana_101 usa rayo contra luis_133. Daño: 15
+2026-04-04T01:33:31.156000Z [S-1001] luis_133 usa hidrobomba contra ana_101. Daño: 3
+2026-04-04T01:33:31.156000Z [S-1001] Jugador cae. Ganador: ana_101
+2026-04-04T01:33:32.012000Z [S-1002] Batalla iniciada por p1a_165
+2026-04-04T01:33:32.012000Z [S-1003] Batalla iniciada por p2a_229
+2026-04-04T01:33:32.012000Z [S-1002] Ronda 1. Orden: p1a_165, p1b_197
+2026-04-04T01:33:32.012000Z [S-1002] p1a_165 usa rayo contra p1b_197. Daño: 15
+2026-04-04T01:33:32.012000Z [S-1002] p1b_197 usa hidrobomba contra p1a_165. Daño: 3
+2026-04-04T01:33:32.012000Z [S-1003] Ronda 1. Orden: p2b_261, p2a_229
+2026-04-04T01:33:32.012000Z [S-1003] p2b_261 usa llama contra p2a_229. Daño: 15
+2026-04-04T01:33:32.012000Z [S-1003] p2a_229 usa latigo_cepa contra p2b_261. Daño: 2
+2026-04-04T01:33:32.012000Z [S-1002] Jugador cae. Ganador: p1a_165
+2026-04-04T01:33:32.012000Z [S-1003] Jugador cae. Ganador: p2a_229
+2026-04-04T01:33:32.272000Z [S-1004] Batalla iniciada por victor_293
+2026-04-04T01:33:32.272000Z [S-1004] perdedor_325 se rinde. Ganador: victor_293
+2026-04-04T01:33:32.472000Z [I-1001] Intercambio completo: inter_a_194(99) <-> inter_b_226(100)

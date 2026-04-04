@@ -1,10 +1,12 @@
 defmodule PokemonBattle.SupervisorBatallas do
   @moduledoc """
-  `DynamicSupervisor` para administrar salas de batalla en paralelo.
+  Supervisor dinámico que arranca y vigila procesos `PokemonBattle.Batalla` (una sala = un hijo temporal).
+  Permite muchas batallas concurrentes sin que una caída afecte al resto del sistema.
   """
 
   use DynamicSupervisor
 
+  @doc "Inicia el `DynamicSupervisor` registrado con nombre `PokemonBattle.SupervisorBatallas`."
   def start_link(opts \\ []) do
     DynamicSupervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end

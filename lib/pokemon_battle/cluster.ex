@@ -1,9 +1,9 @@
 defmodule PokemonBattle.Cluster do
   @moduledoc """
-  Soporte de cluster para ejecutar batallas en otros nodos BEAM.
+  Utilidades de **cluster BEAM**: conectar nodos, elegir dónde crear una sala y llamar por RPC al gestor remoto.
 
-  - usa `Node.connect/1`
-  - permite delegar creación de salas de batalla a un nodo remoto vía `:rpc.call/4`
+  Complementa `GESTOR_SALAS_NODE` en `GestorSalas`: aquí se agrupan `CLUSTER_NODES`, `BATTLE_NODE` y
+  helpers para invocar `GestorSalas.crear_sala/2` en otro nodo cuando la topología lo requiere.
   """
 
   @doc """

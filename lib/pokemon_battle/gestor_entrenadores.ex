@@ -1,11 +1,11 @@
 defmodule PokemonBattle.GestorEntrenadores do
   @moduledoc """
-  Lógica de entrenadores:
+  **Reglas de negocio** del entrenador por encima de `Persistencia`.
 
-  - Login (`iniciar`)
-  - Perfil e inventario
-  - Clasificación
-  - Equipos: `crear_equipo` y `usar_equipo`
+  Aquí se implementa lo que el jugador percibe como cuenta: inicio de sesión y registro,
+  consulta de perfil e inventario con instancias resueltas, clasificación global
+  y gestión de equipos (crear, listar, modificar, marcar equipo activo para batallas).
+  Todas las operaciones delegan en `PokemonBattle.Persistencia` para mantener datos coherentes en disco.
   """
 
   alias PokemonBattle.Persistencia
@@ -52,7 +52,10 @@ defmodule PokemonBattle.GestorEntrenadores do
     end
   end
 
-  @doc "Devuelve el perfil del entrenador (map con datos persistidos)."
+  @doc """
+  Devuelve el mapa completo del entrenador tal como está en persistencia, o `{:error, :no_existe}`.
+  Sirve para mostrar monedas, victorias, inventario en bruto, etc.
+  """
   def perfil(usuario) do
     usuario = to_string(usuario)
     Persistencia.obtener_entrenador(usuario) || {:error, :no_existe}
@@ -81,7 +84,9 @@ defmodule PokemonBattle.GestorEntrenadores do
   end
 
   @doc """
-  Devuelve clasificación ordenada por un puntaje (monedas + victorias).
+  Construye la tabla de clasificación: lista ordenada primero por **victorias** (descendente)
+  y luego por **monedas acumuladas** (histórico de ganancias, descendente).
+  Cada fila incluye `:usuario`, `:monedas`, `:monedas_acumuladas` y `:victorias`.
   """
   def clasificacion() do
     trainers = Persistencia.listar_entrenadores()
@@ -112,7 +117,9 @@ defmodule PokemonBattle.GestorEntrenadores do
   # Equipos
   # =========================
 
-  @doc "Crea un equipo (1 a 3 Pokémon) con nombre único para el usuario."
+  @doc """
+  Crea o sustituye un equipo con nombre único para ese usuario, con entre 1 y 3 Pokémon cuyos IDs estén en su inventario.
+  """
   def crear_equipo(usuario, nombre, pokemon_ids) do
     usuario = to_string(usuario)
     nombre = to_string(nombre)
@@ -120,6 +127,9 @@ defmodule PokemonBattle.GestorEntrenadores do
     Persistencia.guardar_equipo(usuario, nombre, ids)
   end
 
+  @doc """
+  Devuelve `{:ok, mapa_de_equipos}` donde cada clave es el nombre del equipo y el valor es la lista de IDs de instancia.
+  """
   def listar_equipos(usuario) do
     case Persistencia.listar_equipos(usuario) do
       {:ok, map} -> {:ok, map}
@@ -127,15 +137,23 @@ defmodule PokemonBattle.GestorEntrenadores do
     end
   end
 
+  @doc """
+  Quita un Pokémon de un equipo guardado sin borrarlo del inventario. El equipo no puede quedar vacío.
+  """
   def quitar_pokemon_equipo(usuario, nombre_equipo, pokemon_id) do
     Persistencia.equipo_quitar_pokemon(usuario, nombre_equipo, pokemon_id)
   end
 
+  @doc """
+  Añade al equipo un Pokémon que ya esté en el inventario, si el equipo tiene menos de 3 miembros y no está duplicado.
+  """
   def agregar_pokemon_equipo(usuario, nombre_equipo, pokemon_id) do
     Persistencia.equipo_agregar_pokemon(usuario, nombre_equipo, pokemon_id)
   end
 
-  @doc "Selecciona un equipo previamente creado como `equipo_activo`."
+  @doc """
+  Marca un equipo guardado como **equipo activo** (`equipo_activo` en el perfil). Ese equipo se usará al unirse a una sala de batalla.
+  """
   def usar_equipo(usuario, nombre_equipo) do
     usuario = to_string(usuario)
     nombre_equipo = to_string(nombre_equipo)

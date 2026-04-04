@@ -1,9 +1,12 @@
 defmodule PokemonBattle.GestorSalas do
   @moduledoc """
-  Gestor de salas:
+  **Punto único de entrada** para salas de batalla e intercambio en el nodo local (o remoto vía RPC).
 
-  - Salas de batalla (usa `PokemonBattle.SupervisorBatallas` + GenServer `PokemonBattle.Batalla`)
-  - Salas de intercambio (usa `PokemonBattle.Intercambio`)
+  Registra IDs de sala (`S-1001`, `I-1001`), crea procesos hijos bajo supervisión y reenvía comandos
+  al `Batalla` o `Intercambio` correspondiente. Si defines la variable de entorno `GESTOR_SALAS_NODE`,
+  todas las llamadas públicas se delegan a ese nodo BEAM conectado, de modo que varias consolas compartan el mismo gestor.
+
+  Depende de `SupervisorBatallas` para las batallas y de un `DynamicSupervisor` interno para intercambios.
   """
 
   use GenServer
@@ -23,6 +26,9 @@ defmodule PokemonBattle.GestorSalas do
   # API pública
   # =========================
 
+  @doc """
+  Arranca el `GenServer` registrado como `PokemonBattle.GestorSalas`; debe formar parte del árbol de supervisión.
+  """
   def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, opts, name: __MODULE__)
 
   @doc """
@@ -40,11 +46,8 @@ defmodule PokemonBattle.GestorSalas do
 
   def normalizar_id_sala(room_id), do: room_id |> to_string() |> normalizar_id_sala()
 
-  @doc """
-  Si `GESTOR_SALAS_NODE` apunta a otro nodo BEAM conectado (`Node.connect/1`),
-  todas las operaciones de salas se delegan ahí. Así dos terminales pueden
-  compartir salas siempre que el cliente use el nodo donde vive el gestor.
-  """
+  # Llamada local usada solo por RPC (`:rpc.call/4`); ver `GESTOR_SALAS_NODE` en `@moduledoc`.
+  @doc false
   def __local_gs_call__(msg), do: GenServer.call(__MODULE__, msg)
 
   defp gs_call(msg) do
@@ -71,44 +74,71 @@ defmodule PokemonBattle.GestorSalas do
     end
   end
 
+  @doc """
+  Lista salas de batalla e intercambio conocidas por este gestor con su estado resumido.
+  """
   def listar_salas() do
     gs_call(:listar_salas)
   end
 
+  @doc """
+  Crea una sala de batalla; el `usuario` queda como creador/jugador 1. Opciones pueden incluir `caller_pid` para monitorizar la consola.
+  """
   def crear_sala(usuario, opts \\ []) do
     gs_call({:crear_sala, usuario, opts})
   end
 
+  @doc """
+  Une al `usuario` a la sala `room_id` (normalizado a `S-...`). `caller_pid` opcional para desconexión del cliente.
+  """
   def unirse_sala(room_id, usuario, caller_pid \\ nil) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:unirse_sala, room_id, usuario, caller_pid})
   end
 
+  @doc """
+  Inicia el combate cuando hay dos jugadores: carga equipos activos y comienza la máquina de turnos.
+  """
   def iniciar_batalla(room_id, usuario_iniciador \\ nil) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:iniciar_batalla, room_id, usuario_iniciador})
   end
 
+  @doc """
+  Registra la acción de ataque del `usuario` en la sala con el id de movimiento indicado (debe pertenecer al Pokémon activo de ese jugador).
+  """
   def ataque(room_id, usuario, movimiento_id) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:ataque, room_id, usuario, movimiento_id})
   end
 
+  @doc """
+  Solicita cambiar al Pokémon de instancia `pokemon_id` del equipo del `usuario` en esa batalla.
+  """
   def cambiar(room_id, usuario, pokemon_id) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:cambiar, room_id, usuario, pokemon_id})
   end
 
+  @doc """
+  El `usuario` se rinde en la batalla de esa sala; el rival gana y se aplican recompensas según la lógica de `Batalla`.
+  """
   def rendirse(room_id, usuario) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:rendirse, room_id, usuario})
   end
 
+  @doc """
+  Consulta el último orden de actuación por velocidad en la ronda anterior (útil para pruebas o depuración).
+  """
   def obtener_ultimo_orden(room_id) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:obtener_ultimo_orden, room_id})
   end
 
+  @doc """
+  Devuelve un resumen del estado de la batalla en esa sala (HP, turno, jugadores, etc.).
+  """
   def obtener_batalla_estado(room_id) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:obtener_batalla_estado, room_id})
@@ -118,30 +148,48 @@ defmodule PokemonBattle.GestorSalas do
   # Intercambio
   # =========================
 
+  @doc """
+  Crea una sala de intercambio; el primer jugador queda registrado esperando al segundo.
+  """
   def crear_sala_intercambio(usuario, opts \\ []) do
     gs_call({:crear_sala_intercambio, usuario, opts})
   end
 
+  @doc """
+  Une al segundo entrenador a la sala de intercambio `I-...`.
+  """
   def unirse_sala_intercambio(room_id, usuario, caller_pid \\ nil) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:unirse_sala_intercambio, room_id, usuario, caller_pid})
   end
 
+  @doc """
+  El `usuario` ofrece un Pokémon de su inventario (id de instancia) para el intercambio.
+  """
   def ofrecer_pokemon_intercambio(room_id, usuario, pokemon_id) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:ofrecer_pokemon_intercambio, room_id, usuario, pokemon_id})
   end
 
+  @doc """
+  Marca confirmación del `usuario`. Cuando ambos confirman, se intercambian inventarios en persistencia (sin mutar `dueño_original`).
+  """
   def confirmar_intercambio(room_id, usuario) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:confirmar_intercambio, room_id, usuario})
   end
 
+  @doc """
+  Cancela el intercambio desde el lado del `usuario` (o ante desconexión monitorizada).
+  """
   def cancelar_intercambio(room_id, usuario) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:cancelar_intercambio, room_id, usuario})
   end
 
+  @doc """
+  Devuelve el estado de la sala de intercambio (ofertas, confirmaciones, jugadores).
+  """
   def obtener_intercambio_estado(room_id) do
     room_id = normalizar_id_sala(room_id)
     gs_call({:obtener_intercambio_estado, room_id})

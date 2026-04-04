@@ -1,20 +1,26 @@
 defmodule PokemonBattle.Persistencia do
   @moduledoc """
-  Capa de persistencia basada en JSON con guardado automático tras cada cambio.
+  Capa de **persistencia** del juego: todo lo que debe sobrevivir entre ejecuciones
+  pasa por este módulo.
 
-  Gestiona:
-  - **Entrenadores**: credenciales (hash), monedas, historial.
-  - **Inventario**: IDs de instancias de Pokémon poseídas por cada usuario.
-  - **Sobres**: contador de sobres sin abrir por entrenador.
-  - **Equipos**: nombres únicos por usuario, 1–3 Pokémon (IDs de instancia).
-  - **Instancias de Pokémon** y catálogo de especies (solo en `pokemon.json`).
-  - Catálogo de movimientos y precios de tienda.
+  ## Para qué sirve
 
-  Implementación: un `GenServer` serializa escrituras y evita corrupción de datos;
-  cada mutación vuelca a disco de forma atómica (archivo temporal + renombrado).
+  - Centralizar lectura/escritura de archivos JSON en **un solo proceso** (`GenServer`)
+    para que dos batallas o dos comandos no escriban a la vez y corrompan datos.
+  - Mantener **entrenadores**, **inventario**, **equipos**, **sobres**, **instancias de Pokémon**
+    y catálogos estáticos (especies, movimientos, tienda).
 
-  **Decisión de diseño**: las claves en memoria y en JSON son *strings* para
-  coincidir con `Jason` y simplificar la depuración de archivos.
+  ## Qué archivos toca
+
+  - `trainers.json` — usuarios, monedas, inventario, equipos, cola de sobres.
+  - `pokemon.json` — catálogo de especies e **instancias** (cada Pokémon concreto).
+  - `moves.json` — movimientos disponibles en combate.
+  - `tienda.json` — precios y probabilidades de sobres.
+  - `battles.log` — registro textual de eventos (append).
+
+  Cada cambio relevante **guarda en disco** (estrategia segura con archivo temporal + renombre).
+
+  Las claves en memoria y JSON son **strings** para alinearlas con `Jason` y facilitar inspección manual.
   """
 
   use GenServer
@@ -29,22 +35,33 @@ defmodule PokemonBattle.Persistencia do
 
   # --- API pública: arranque y utilidades ---
 
-  @doc "Inicia el proceso de persistencia (registrado como `#{inspect(@name)}`)."
+  @doc """
+  Arranca el `GenServer` de persistencia con nombre registrado `#{inspect(@name)}`.
+  Debe estar en el árbol de supervisión de la aplicación para que el juego pueda leer/escribir datos.
+  """
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: @name)
   end
 
-  @doc "Directorio absoluto donde viven los JSON (`config :proyecto_pokemon, :data_dir`)."
+  @doc """
+  Devuelve el directorio de datos (ruta absoluta) donde están `trainers.json`, `pokemon.json`, etc.
+  Se configura con `config :proyecto_pokemon, :data_dir`.
+  """
   def data_dir do
     Application.fetch_env!(:proyecto_pokemon, :data_dir)
   end
 
-  @doc "Hash SHA-256 en Base64 para almacenar contraseñas sin texto plano."
+  @doc """
+  Calcula el hash SHA-256 de la contraseña y lo codifica en Base64.
+  Sirve para guardar solo el hash en `trainers.json`, nunca la clave en claro.
+  """
   def hash_clave(clave) when is_binary(clave) do
     :crypto.hash(:sha256, clave) |> Base.encode64()
   end
 
-  @doc "Verifica contraseña contra el hash almacenado."
+  @doc """
+  Comprueba si la contraseña en texto plano coincide con el `clave_hash` guardado (mismo algoritmo que `hash_clave/1`).
+  """
   def verificar_clave?(clave, hash_almacenado)
       when is_binary(clave) and is_binary(hash_almacenado) do
     hash_clave(clave) == hash_almacenado
@@ -52,7 +69,9 @@ defmodule PokemonBattle.Persistencia do
 
   # --- Entrenadores ---
 
-  @doc "Obtiene el mapa del entrenador o `nil` si no existe."
+  @doc """
+  Lee el registro completo del entrenador (mapa con monedas, inventario, equipos, etc.) o `nil` si el usuario no existe.
+  """
   def obtener_entrenador(usuario), do: GenServer.call(@name, {:obtener_entrenador, usuario})
 
   @doc """
@@ -63,95 +82,148 @@ defmodule PokemonBattle.Persistencia do
     GenServer.call(@name, {:guardar_entrenador, usuario, attrs})
   end
 
-  @doc "Lista todos los entrenadores (mapa usuario -> datos)."
+  @doc """
+  Devuelve un mapa `usuario => datos` con todos los entrenadores cargados en memoria (útil para ranking y administración).
+  """
   def listar_entrenadores, do: GenServer.call(@name, :listar_entrenadores)
 
   # --- Inventario (IDs de instancias) ---
 
-  @doc "IDs de Pokémon-instancia en inventario del usuario."
+  @doc """
+  Lista los IDs numéricos de instancias de Pokémon que posee el entrenador. Formato `{:ok, [id, ...]}`.
+  """
   def inventario_pokemon(usuario), do: GenServer.call(@name, {:inventario_pokemon, usuario})
 
-  @doc "Añade un ID de instancia al inventario del usuario."
+  @doc """
+  Registra que el entrenador posee una nueva instancia (tras sobre, compra o registro). Persiste `trainers.json`.
+  """
   def agregar_al_inventario(usuario, pokemon_id),
     do: GenServer.call(@name, {:agregar_al_inventario, usuario, pokemon_id})
 
-  @doc "Quita un ID del inventario (p. ej. tras intercambio)."
+  @doc """
+  Elimina un ID del inventario del usuario (por ejemplo al ceder el Pokémon en un intercambio). No borra la instancia en `pokemon.json`.
+  """
   def quitar_del_inventario(usuario, pokemon_id),
     do: GenServer.call(@name, {:quitar_del_inventario, usuario, pokemon_id})
 
   # --- Sobres ---
 
-  @doc "Número de sobres sin abrir."
+  @doc """
+  Devuelve el contador numérico de “sobres sin abrir” (campo legado; la apertura real usa la cola `cola_sobres`).
+  """
   def sobres_sin_abrir(usuario), do: GenServer.call(@name, {:sobres, usuario})
 
-  @doc "Incrementa o decrementa sobres (delta entero)."
+  @doc """
+  Suma o resta al contador `sobres_sin_abrir` del entrenador (entero `delta`).
+  """
   def ajustar_sobres(usuario, delta) when is_integer(delta),
     do: GenServer.call(@name, {:ajustar_sobres, usuario, delta})
 
-  @doc "Añade un sobre comprado a la cola FIFO (`clave` = clave en tienda, ej. `sobre_basico`)."
+  @doc """
+  Encola un sobre comprado al final (FIFO). `clave_sobre` es la clave en `tienda.json` (p. ej. `sobre_basico`).
+  """
   def push_sobre_cola(usuario, clave_sobre),
     do: GenServer.call(@name, {:push_sobre_cola, usuario, clave_sobre})
 
-  @doc "Saca el próximo sobre a abrir; devuelve la clave de tienda o error."
+  @doc """
+  Extrae el siguiente sobre de la cola para abrirlo. Devuelve `{:ok, clave}` o `{:error, :cola_vacia}`.
+  """
   def pop_sobre_cola(usuario), do: GenServer.call(@name, {:pop_sobre_cola, usuario})
 
   # --- Equipos (1–3 Pokémon, nombres únicos por usuario) ---
 
-  @doc "Mapa nombre_equipo -> [ids]."
+  @doc """
+  Lista equipos guardados: `{:ok, %{\"nombre_equipo\" => [id1, id2, ...]}}` con hasta 3 Pokémon por equipo.
+  """
   def listar_equipos(usuario), do: GenServer.call(@name, {:listar_equipos, usuario})
 
-  @doc "Crea o reemplaza un equipo. Valida 1–3 IDs existentes en inventario y nombre único."
+  @doc """
+  Crea un equipo nuevo o sustituye uno existente con el mismo nombre. Exige 1–3 IDs que estén en el inventario y nombre único por usuario.
+  """
   def guardar_equipo(usuario, nombre_equipo, pokemon_ids),
     do: GenServer.call(@name, {:guardar_equipo, usuario, nombre_equipo, pokemon_ids})
 
-  @doc "Elimina un equipo por nombre."
+  @doc """
+  Borra un equipo por nombre para ese usuario.
+  """
   def eliminar_equipo(usuario, nombre_equipo),
     do: GenServer.call(@name, {:eliminar_equipo, usuario, nombre_equipo})
 
+  @doc """
+  Quita un Pokémon (por id de instancia) de un equipo guardado.
+  No permite dejar el equipo vacío. Devuelve `:ok` o `{:error, razón}`.
+  """
   def equipo_quitar_pokemon(usuario, nombre_equipo, pokemon_id),
     do: GenServer.call(@name, {:equipo_quitar_pokemon, usuario, nombre_equipo, pokemon_id})
 
+  @doc """
+  Añade un Pokémon del inventario a un equipo existente (máximo 3 por equipo).
+  Devuelve `:ok` o `{:error, razón}` si está lleno, duplicado o no en inventario.
+  """
   def equipo_agregar_pokemon(usuario, nombre_equipo, pokemon_id),
     do: GenServer.call(@name, {:equipo_agregar_pokemon, usuario, nombre_equipo, pokemon_id})
 
   # --- Instancias Pokémon ---
 
-  @doc "Inserta una nueva instancia (sin campo `id`); devuelve el id asignado."
+  @doc """
+  Crea un Pokémon concreto (instancia) en `pokemon.json`: asigna `id` autoincremental y devuelve `{:ok, id}`.
+  El mapa no debe incluir `id` todavía.
+  """
   def crear_instancia_pokemon(mapa_sin_id) when is_map(mapa_sin_id) do
     GenServer.call(@name, {:crear_instancia_pokemon, mapa_sin_id})
   end
 
-  @doc "Obtiene instancia por id (entero o string coercible)."
+  @doc """
+  Obtiene el mapa de una instancia por su `id` (acepta entero o cadena numérica) o `nil` si no existe.
+  """
   def obtener_instancia(id), do: GenServer.call(@name, {:obtener_instancia, id})
 
-  @doc "Actualiza instancia con función `(map -> map)`."
+  @doc """
+  Aplica una función `fn instancia -> instancia_actualizada` y persiste el resultado (p. ej. tras recibir daño en batalla).
+  """
   def actualizar_instancia(id, fun) when is_function(fun, 1),
     do: GenServer.call(@name, {:actualizar_instancia, id, fun})
 
-  @doc "Catálogo de especies (solo lectura): nombre especie -> datos base."
+  @doc """
+  Catálogo estático de especies: nombre de especie → tipos, stats base, etc. (solo lectura desde `pokemon.json`).
+  """
   def catalogo_especies, do: GenServer.call(@name, :catalogo_especies)
 
   # --- Datos estáticos ---
 
-  @doc "Contenido completo de `moves.json` (movimientos por tipo + globales)."
+  @doc """
+  Devuelve la estructura completa de `moves.json`: movimientos agrupados por tipo y lista global (para combate y generación al abrir sobres).
+  """
   def catalogo_movimientos, do: GenServer.call(@name, :catalogo_movimientos)
 
-  @doc "Precios y metadatos de la tienda (`tienda.json`)."
+  @doc """
+  Devuelve el catálogo de la tienda: precios de sobres y probabilidades de rareza por tipo de sobre (`tienda.json`).
+  """
   def catalogo_tienda, do: GenServer.call(@name, :catalogo_tienda)
 
   # --- Monedas e historial ---
 
-  @doc "Ajusta monedas del entrenador (puede ser negativo si hay saldo)."
+  @doc """
+  Suma o resta monedas al saldo del entrenador.
+  Si `delta` es positivo, también incrementa `monedas_acumuladas` (historial para ranking).
+  Falla con `{:error, :saldo_insuficiente}` si el saldo quedaría negativo.
+  """
   def ajustar_monedas(usuario, delta) when is_integer(delta),
     do: GenServer.call(@name, {:ajustar_monedas, usuario, delta})
 
-  @doc "Añade una entrada al historial del entrenador (lista de términos serializables a JSON)."
+  @doc """
+  Añade un elemento al historial interno del entrenador (mapa o lista serializable a JSON).
+  Sirve para auditoría o extensiones futuras.
+  """
   def agregar_historial(usuario, entrada) when is_list(entrada) or is_map(entrada),
     do: GenServer.call(@name, {:agregar_historial, usuario, entrada})
 
   # --- Log de batallas ---
 
-  @doc "Añade una línea de texto al archivo `battles.log` (fecha ISO8601 la añade el caller o aquí)."
+  @doc """
+  Añade **una línea** al final de `battles.log` (operación asíncrona `cast`, no bloquea).
+  Útil para registrar inicio/fin de batalla e hitos sin pasar por el mapa de entrenador.
+  """
   def append_battle_log(linea) when is_binary(linea) do
     GenServer.cast(@name, {:append_battle_log, linea})
   end
