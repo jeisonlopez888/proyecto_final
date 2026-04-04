@@ -88,6 +88,13 @@ defmodule PokemonBattle.Persistencia do
   def ajustar_sobres(usuario, delta) when is_integer(delta),
     do: GenServer.call(@name, {:ajustar_sobres, usuario, delta})
 
+  @doc "Añade un sobre comprado a la cola FIFO (`clave` = clave en tienda, ej. `sobre_basico`)."
+  def push_sobre_cola(usuario, clave_sobre),
+    do: GenServer.call(@name, {:push_sobre_cola, usuario, clave_sobre})
+
+  @doc "Saca el próximo sobre a abrir; devuelve la clave de tienda o error."
+  def pop_sobre_cola(usuario), do: GenServer.call(@name, {:pop_sobre_cola, usuario})
+
   # --- Equipos (1–3 Pokémon, nombres únicos por usuario) ---
 
   @doc "Mapa nombre_equipo -> [ids]."
@@ -100,6 +107,12 @@ defmodule PokemonBattle.Persistencia do
   @doc "Elimina un equipo por nombre."
   def eliminar_equipo(usuario, nombre_equipo),
     do: GenServer.call(@name, {:eliminar_equipo, usuario, nombre_equipo})
+
+  def equipo_quitar_pokemon(usuario, nombre_equipo, pokemon_id),
+    do: GenServer.call(@name, {:equipo_quitar_pokemon, usuario, nombre_equipo, pokemon_id})
+
+  def equipo_agregar_pokemon(usuario, nombre_equipo, pokemon_id),
+    do: GenServer.call(@name, {:equipo_agregar_pokemon, usuario, nombre_equipo, pokemon_id})
 
   # --- Instancias Pokémon ---
 
@@ -271,6 +284,40 @@ defmodule PokemonBattle.Persistencia do
     end
   end
 
+  def handle_call({:push_sobre_cola, usuario, clave}, _from, state) do
+    clave = to_string(clave)
+
+    case entrenador(state, usuario) do
+      nil ->
+        {:reply, {:error, :no_existe}, state}
+
+      t ->
+        cola = ensure_cola_sobres(t)
+        cola2 = cola ++ [clave]
+        t2 = t |> Map.put("cola_sobres", cola2) |> Map.put("sobres_sin_abrir", length(cola2))
+        {:reply, :ok, put_entrenador!(state, usuario, t2)}
+    end
+  end
+
+  def handle_call({:pop_sobre_cola, usuario}, _from, state) do
+    case entrenador(state, usuario) do
+      nil ->
+        {:reply, {:error, :no_existe}, state}
+
+      t ->
+        cola = ensure_cola_sobres(t)
+
+        case cola do
+          [] ->
+            {:reply, {:error, :no_hay_sobres}, state}
+
+          [h | rest] ->
+            t2 = t |> Map.put("cola_sobres", rest) |> Map.put("sobres_sin_abrir", length(rest))
+            {:reply, {:ok, h}, put_entrenador!(state, usuario, t2)}
+        end
+    end
+  end
+
   def handle_call({:listar_equipos, usuario}, _from, state) do
     case entrenador(state, usuario) do
       nil -> {:reply, {:error, :no_existe}, state}
@@ -301,12 +348,84 @@ defmodule PokemonBattle.Persistencia do
             equipos = t["equipos"] || %{}
             inventario = MapSet.new(t["inventario_pokemon_ids"] || [])
 
-            if Enum.all?(ids, &(&1 in inventario)) do
-              equipos2 = Map.put(equipos, nombre, ids)
+            if Map.has_key?(equipos, nombre) do
+              {:reply, {:error, :nombre_equipo_ocupado}, state}
+            else
+              if Enum.all?(ids, &(&1 in inventario)) do
+                equipos2 = Map.put(equipos, nombre, ids)
+                t2 = Map.put(t, "equipos", equipos2)
+                {:reply, :ok, put_entrenador!(state, usuario, t2)}
+              else
+                {:reply, {:error, :pokemon_no_en_inventario}, state}
+              end
+            end
+        end
+    end
+  end
+
+  def handle_call({:equipo_quitar_pokemon, usuario, nombre_equipo, pokemon_id}, _from, state) do
+    nombre = to_string(nombre_equipo)
+    id = to_id(pokemon_id)
+
+    case entrenador(state, usuario) do
+      nil ->
+        {:reply, {:error, :no_existe}, state}
+
+      t ->
+        equipos = t["equipos"] || %{}
+
+        case Map.get(equipos, nombre) do
+          nil ->
+            {:reply, {:error, :equipo_inexistente}, state}
+
+          ids when length(ids) <= 1 ->
+            {:reply, {:error, :equipo_minimo_un_pokemon}, state}
+
+          ids ->
+            ids2 = List.delete(ids, id)
+
+            if length(ids2) == length(ids) do
+              {:reply, {:error, :pokemon_no_en_equipo}, state}
+            else
+              equipos2 = Map.put(equipos, nombre, ids2)
               t2 = Map.put(t, "equipos", equipos2)
               {:reply, :ok, put_entrenador!(state, usuario, t2)}
-            else
-              {:reply, {:error, :pokemon_no_en_inventario}, state}
+            end
+        end
+    end
+  end
+
+  def handle_call({:equipo_agregar_pokemon, usuario, nombre_equipo, pokemon_id}, _from, state) do
+    nombre = to_string(nombre_equipo)
+    id = to_id(pokemon_id)
+
+    case entrenador(state, usuario) do
+      nil ->
+        {:reply, {:error, :no_existe}, state}
+
+      t ->
+        equipos = t["equipos"] || %{}
+        inventario = MapSet.new(t["inventario_pokemon_ids"] || [])
+
+        case Map.get(equipos, nombre) do
+          nil ->
+            {:reply, {:error, :equipo_inexistente}, state}
+
+          ids ->
+            cond do
+              length(ids) >= 3 ->
+                {:reply, {:error, :equipo_lleno}, state}
+
+              id in ids ->
+                {:reply, {:error, :pokemon_duplicado_en_equipo}, state}
+
+              id not in inventario ->
+                {:reply, {:error, :pokemon_no_en_inventario}, state}
+
+              true ->
+                equipos2 = Map.put(equipos, nombre, ids ++ [id])
+                t2 = Map.put(t, "equipos", equipos2)
+                {:reply, :ok, put_entrenador!(state, usuario, t2)}
             end
         end
     end
@@ -395,7 +514,9 @@ defmodule PokemonBattle.Persistencia do
         if monedas < 0 do
           {:reply, {:error, :saldo_insuficiente}, state}
         else
-          t2 = Map.put(t, "monedas", monedas)
+          acum = t["monedas_acumuladas"] || 0
+          acum2 = if delta > 0, do: acum + delta, else: acum
+          t2 = t |> Map.put("monedas", monedas) |> Map.put("monedas_acumuladas", acum2)
           {:reply, {:ok, monedas}, put_entrenador!(state, usuario, t2)}
         end
     end
@@ -437,6 +558,22 @@ defmodule PokemonBattle.Persistencia do
   defp entrenador(state, usuario) do
     u = to_string(usuario)
     get_in(state.trainers, ["usuarios", u])
+  end
+
+  defp ensure_cola_sobres(t) do
+    cola = t["cola_sobres"]
+    n = t["sobres_sin_abrir"] || 0
+
+    cond do
+      is_list(cola) && cola != [] ->
+        cola
+
+      n > 0 ->
+        List.duplicate("sobre_basico", n)
+
+      true ->
+        []
+    end
   end
 
   defp ensure_entrenador(state, usuario) do

@@ -1,0 +1,814 @@
+{
+  "usuarios": {
+    "inter_b_1635": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "cola_sobres": [
+        "sobre_basico"
+      ],
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        71
+      ],
+      "monedas": 0,
+      "monedas_acumuladas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "ana_707": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          62
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        62
+      ],
+      "monedas": 100,
+      "monedas_acumuladas": 100,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "luis_514": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          43
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        43
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "perdedor_2052": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          31
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        31
+      ],
+      "monedas": 180,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "luis_323": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          24
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        24
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "inter_a_643": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        59
+      ],
+      "monedas": 0,
+      "monedas_acumuladas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "inter_a_517": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        18
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "ana_3141": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          6
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        6
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "inter_a_3301": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        13
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "sobres_485": {
+      "clave_hash": "bVB0tL8rkThmFX12dPHtoELFxhSHbeh291EnAtJXKgY=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        14,
+        15,
+        16
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 0,
+      "victorias": 0
+    },
+    "sobres_1635": {
+      "clave_hash": "bVB0tL8rkThmFX12dPHtoELFxhSHbeh291EnAtJXKgY=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        3,
+        4,
+        5
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 0,
+      "victorias": 0
+    },
+    "victor_2020": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          30
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        30
+      ],
+      "monedas": 300,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "inter_b_3333": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        12
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "victor_4388": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          44
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        44
+      ],
+      "monedas": 300,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "perdedor_4420": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          45
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        45
+      ],
+      "monedas": 180,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "perdedor_3237": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          9
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        9
+      ],
+      "monedas": 180,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "perdedor_4002": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          61
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        61
+      ],
+      "monedas": 230,
+      "monedas_acumuladas": 230,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "inter_b_675": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        58
+      ],
+      "monedas": 0,
+      "monedas_acumuladas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "luis_2116": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          33
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        33
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "trainer_test_4452": {
+      "clave_hash": "LXEWQrcmsEQBYnyp+6wy9chTD7GQPMTbAiWHF5IaSIE=",
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        46
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 0
+    },
+    "sobres_611": {
+      "clave_hash": "bVB0tL8rkThmFX12dPHtoELFxhSHbeh291EnAtJXKgY=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        55,
+        56,
+        57
+      ],
+      "monedas": 0,
+      "monedas_acumuladas": 0,
+      "sobres_sin_abrir": 0,
+      "victorias": 0
+    },
+    "ana": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo1",
+      "equipos": {
+        "equipo1": [
+          36,
+          37,
+          38
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        36,
+        37,
+        38
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 0,
+      "victorias": 0
+    },
+    "trainer_test_2148": {
+      "clave_hash": "LXEWQrcmsEQBYnyp+6wy9chTD7GQPMTbAiWHF5IaSIE=",
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        35
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 0
+    },
+    "luis": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo2",
+      "equipos": {
+        "equipo2": [
+          39,
+          40,
+          41
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        39,
+        40,
+        41
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 0,
+      "victorias": 0
+    },
+    "inter_b_4516": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        48
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "ana_7396": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "cola_sobres": [
+        "sobre_basico"
+      ],
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          66
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        66
+      ],
+      "monedas": 100,
+      "monedas_acumuladas": 100,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "trainer_test_195": {
+      "clave_hash": "LXEWQrcmsEQBYnyp+6wy9chTD7GQPMTbAiWHF5IaSIE=",
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        20
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 0
+    },
+    "victor_3970": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          60
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        60
+      ],
+      "monedas": 300,
+      "monedas_acumuladas": 300,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "sobres_7460": {
+      "clave_hash": "bVB0tL8rkThmFX12dPHtoELFxhSHbeh291EnAtJXKgY=",
+      "cola_sobres": [],
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        68,
+        69,
+        70
+      ],
+      "monedas": 0,
+      "monedas_acumuladas": 0,
+      "sobres_sin_abrir": 0,
+      "victorias": 0
+    },
+    "inter_a_4484": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        49
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "inter_a_1603": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "cola_sobres": [
+        "sobre_basico"
+      ],
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        72
+      ],
+      "monedas": 0,
+      "monedas_acumuladas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "trainer_test_3269": {
+      "clave_hash": "LXEWQrcmsEQBYnyp+6wy9chTD7GQPMTbAiWHF5IaSIE=",
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        10
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 0
+    },
+    "luis_739": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          63
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        63
+      ],
+      "monedas": 0,
+      "monedas_acumuladas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "trainer_test_130": {
+      "clave_hash": "LXEWQrcmsEQBYnyp+6wy9chTD7GQPMTbAiWHF5IaSIE=",
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        2
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 0
+    },
+    "inter_b_549": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        17
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "trainer_test_579": {
+      "clave_hash": "LXEWQrcmsEQBYnyp+6wy9chTD7GQPMTbAiWHF5IaSIE=",
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        54
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 0
+    },
+    "cli_ana2": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "ana_291": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          23
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        23
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "sobres_1924": {
+      "clave_hash": "bVB0tL8rkThmFX12dPHtoELFxhSHbeh291EnAtJXKgY=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        25,
+        26,
+        27
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 0,
+      "victorias": 0
+    },
+    "victor_227": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          21
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        21
+      ],
+      "monedas": 300,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "ana_482": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          42
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        42
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "luis_3173": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          7
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        7
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "luis_7428": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "cola_sobres": [
+        "sobre_basico"
+      ],
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          67
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        67
+      ],
+      "monedas": 30,
+      "monedas_acumuladas": 30,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "inter_b_1988": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        28
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "trainer_test_1667": {
+      "clave_hash": "LXEWQrcmsEQBYnyp+6wy9chTD7GQPMTbAiWHF5IaSIE=",
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        74
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 0
+    },
+    "victor_3205": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          8
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        8
+      ],
+      "monedas": 300,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "ana_2084": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          32
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        32
+      ],
+      "monedas": 100,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "perdedor_259": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          22
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        22
+      ],
+      "monedas": 180,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "victor_642": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "cola_sobres": [
+        "sobre_basico"
+      ],
+      "derrotas": 0,
+      "equipo_activo": "equipo_1",
+      "equipos": {
+        "equipo_1": [
+          64
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        64
+      ],
+      "monedas": 300,
+      "monedas_acumuladas": 300,
+      "sobres_sin_abrir": 1,
+      "victorias": 1
+    },
+    "perdedor_674": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "cola_sobres": [
+        "sobre_basico"
+      ],
+      "derrotas": 1,
+      "equipo_activo": "equipo_2",
+      "equipos": {
+        "equipo_2": [
+          65
+        ]
+      },
+      "historial": [],
+      "inventario_pokemon_ids": [
+        65
+      ],
+      "monedas": 230,
+      "monedas_acumuladas": 230,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    },
+    "sobres_4548": {
+      "clave_hash": "bVB0tL8rkThmFX12dPHtoELFxhSHbeh291EnAtJXKgY=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        50,
+        51,
+        52
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 0,
+      "victorias": 0
+    },
+    "inter_a_1956": {
+      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
+      "derrotas": 0,
+      "equipo_activo": null,
+      "equipos": {},
+      "historial": [],
+      "inventario_pokemon_ids": [
+        29
+      ],
+      "monedas": 0,
+      "sobres_sin_abrir": 1,
+      "victorias": 0
+    }
+  }
+}

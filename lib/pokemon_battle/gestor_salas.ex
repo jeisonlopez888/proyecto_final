@@ -1,0 +1,327 @@
+defmodule PokemonBattle.GestorSalas do
+  @moduledoc """
+  Gestor de salas:
+
+  - Salas de batalla (usa `PokemonBattle.SupervisorBatallas` + GenServer `PokemonBattle.Batalla`)
+  - Salas de intercambio (usa `PokemonBattle.Intercambio`)
+  """
+
+  use GenServer
+
+  alias PokemonBattle.SupervisorBatallas
+  alias PokemonBattle.Intercambio
+  alias PokemonBattle.Batalla
+
+  defstruct next_batalla_id: 1001,
+            next_intercambio_id: 1001,
+            batallas: %{}, # room_id => pid
+            intercambios: %{}, # room_id => pid
+            intercambio_supervisor: nil,
+            monitors: %{} # ref => {type, room_id}
+
+  # =========================
+  # API pública
+  # =========================
+
+  def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+
+  @doc """
+  Normaliza IDs de sala (`s-1001` → `S-1001`, `i-1001` → `I-1001`).
+  """
+  def normalizar_id_sala(room_id) when is_binary(room_id) do
+    room_id = String.trim(room_id)
+
+    cond do
+      String.match?(room_id, ~r/^s-/i) -> "S-" <> String.slice(room_id, 2..-1//1)
+      String.match?(room_id, ~r/^i-/i) -> "I-" <> String.slice(room_id, 2..-1//1)
+      true -> room_id
+    end
+  end
+
+  def normalizar_id_sala(room_id), do: room_id |> to_string() |> normalizar_id_sala()
+
+  @doc """
+  Si `GESTOR_SALAS_NODE` apunta a otro nodo BEAM conectado (`Node.connect/1`),
+  todas las operaciones de salas se delegan ahí. Así dos terminales pueden
+  compartir salas siempre que el cliente use el nodo donde vive el gestor.
+  """
+  def __local_gs_call__(msg), do: GenServer.call(__MODULE__, msg)
+
+  defp gs_call(msg) do
+    case rpc_target() do
+      nil ->
+        GenServer.call(__MODULE__, msg)
+
+      n when n == node() ->
+        GenServer.call(__MODULE__, msg)
+
+      n ->
+        case :rpc.call(n, __MODULE__, :__local_gs_call__, [msg]) do
+          {:badrpc, reason} -> {:error, {:rpc, reason}}
+          other -> other
+        end
+    end
+  end
+
+  defp rpc_target() do
+    case System.get_env("GESTOR_SALAS_NODE") do
+      nil -> nil
+      "" -> nil
+      s -> s |> String.trim() |> String.to_atom()
+    end
+  end
+
+  def listar_salas() do
+    gs_call(:listar_salas)
+  end
+
+  def crear_sala(usuario, opts \\ []) do
+    gs_call({:crear_sala, usuario, opts})
+  end
+
+  def unirse_sala(room_id, usuario, caller_pid \\ nil) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:unirse_sala, room_id, usuario, caller_pid})
+  end
+
+  def iniciar_batalla(room_id, usuario_iniciador \\ nil) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:iniciar_batalla, room_id, usuario_iniciador})
+  end
+
+  def ataque(room_id, usuario, movimiento_id) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:ataque, room_id, usuario, movimiento_id})
+  end
+
+  def cambiar(room_id, usuario, pokemon_id) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:cambiar, room_id, usuario, pokemon_id})
+  end
+
+  def rendirse(room_id, usuario) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:rendirse, room_id, usuario})
+  end
+
+  def obtener_ultimo_orden(room_id) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:obtener_ultimo_orden, room_id})
+  end
+
+  def obtener_batalla_estado(room_id) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:obtener_batalla_estado, room_id})
+  end
+
+  # =========================
+  # Intercambio
+  # =========================
+
+  def crear_sala_intercambio(usuario, opts \\ []) do
+    gs_call({:crear_sala_intercambio, usuario, opts})
+  end
+
+  def unirse_sala_intercambio(room_id, usuario, caller_pid \\ nil) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:unirse_sala_intercambio, room_id, usuario, caller_pid})
+  end
+
+  def ofrecer_pokemon_intercambio(room_id, usuario, pokemon_id) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:ofrecer_pokemon_intercambio, room_id, usuario, pokemon_id})
+  end
+
+  def confirmar_intercambio(room_id, usuario) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:confirmar_intercambio, room_id, usuario})
+  end
+
+  def cancelar_intercambio(room_id, usuario) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:cancelar_intercambio, room_id, usuario})
+  end
+
+  def obtener_intercambio_estado(room_id) do
+    room_id = normalizar_id_sala(room_id)
+    gs_call({:obtener_intercambio_estado, room_id})
+  end
+
+  # =========================
+  # GenServer callbacks
+  # =========================
+
+  @impl true
+  def init(_opts) do
+    {:ok, intercambio_supervisor} = DynamicSupervisor.start_link(strategy: :one_for_one)
+    {:ok, %__MODULE__{intercambio_supervisor: intercambio_supervisor}}
+  end
+
+  @impl true
+  def handle_call(:listar_salas, _from, state) do
+    {:reply, {:ok, Map.keys(state.batallas) |> Enum.sort()}, state}
+  end
+
+  def handle_call({:crear_sala, usuario, opts}, _from, state) do
+    room_id = "S-#{state.next_batalla_id}"
+    usuario = to_string(usuario)
+    caller_pid = Keyword.get(opts, :caller_pid, nil)
+    random_factor = Keyword.get(opts, :random_factor, nil)
+    tiempo_turno_ms = Keyword.get(opts, :tiempo_turno_ms, 20_000)
+
+    args = %{
+      room_id: room_id,
+      jugador1: usuario,
+      caller_pid: caller_pid,
+      random_factor: random_factor,
+      tiempo_turno_ms: tiempo_turno_ms
+    }
+
+    {:ok, pid} = SupervisorBatallas.start_batalla(args)
+    ref = Process.monitor(pid)
+    monitors = Map.put(state.monitors, ref, {:batalla, room_id})
+
+    batallas = Map.put(state.batallas, room_id, pid)
+
+    {:reply, {:ok, room_id}, %{state | next_batalla_id: state.next_batalla_id + 1, batallas: batallas, monitors: monitors}}
+  end
+
+  def handle_call({:unirse_sala, room_id, usuario, caller_pid}, _from, state) do
+    usuario = to_string(usuario)
+
+    case Map.fetch(state.batallas, room_id) do
+      {:ok, pid} ->
+        {:reply, Batalla.unirse(pid, usuario, caller_pid), state}
+
+      :error ->
+        {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:iniciar_batalla, room_id, usuario_iniciador}, _from, state) do
+    case Map.fetch(state.batallas, room_id) do
+      {:ok, pid} ->
+        {:reply, Batalla.iniciar(pid, usuario_iniciador), state}
+
+      :error ->
+        {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:ataque, room_id, usuario, movimiento_id}, _from, state) do
+    case Map.fetch(state.batallas, room_id) do
+      {:ok, pid} -> {:reply, Batalla.ataque(pid, usuario, movimiento_id), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:cambiar, room_id, usuario, pokemon_id}, _from, state) do
+    case Map.fetch(state.batallas, room_id) do
+      {:ok, pid} -> {:reply, Batalla.cambiar(pid, usuario, pokemon_id), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:rendirse, room_id, usuario}, _from, state) do
+    case Map.fetch(state.batallas, room_id) do
+      {:ok, pid} -> {:reply, Batalla.rendirse(pid, usuario), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:obtener_ultimo_orden, room_id}, _from, state) do
+    case Map.fetch(state.batallas, room_id) do
+      {:ok, pid} -> {:reply, Batalla.obtener_ultimo_orden(pid), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:obtener_batalla_estado, room_id}, _from, state) do
+    case Map.fetch(state.batallas, room_id) do
+      {:ok, pid} -> {:reply, Batalla.obtener_estado(pid), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:crear_sala_intercambio, usuario, opts}, _from, state) do
+    room_id = "I-#{state.next_intercambio_id}"
+    usuario = to_string(usuario)
+    caller_pid = Keyword.get(opts, :caller_pid, nil)
+    timeout_ms = Keyword.get(opts, :timeout_ms, 30_000)
+
+    args = %{
+      room_id: room_id,
+      jugador1: usuario,
+      caller_pid: caller_pid,
+      timeout_ms: timeout_ms
+    }
+
+    child_spec = {Intercambio, args}
+    {:ok, pid} = DynamicSupervisor.start_child(state.intercambio_supervisor, child_spec)
+    ref = Process.monitor(pid)
+    monitors = Map.put(state.monitors, ref, {:intercambio, room_id})
+    intercambios = Map.put(state.intercambios, room_id, pid)
+
+    {:reply, {:ok, room_id}, %{state | next_intercambio_id: state.next_intercambio_id + 1, intercambios: intercambios, monitors: monitors}}
+  end
+
+  def handle_call({:unirse_sala_intercambio, room_id, usuario, caller_pid}, _from, state) do
+    usuario = to_string(usuario)
+
+    case Map.fetch(state.intercambios, room_id) do
+      {:ok, pid} ->
+        {:reply, Intercambio.unirse(pid, usuario, caller_pid), state}
+
+      :error ->
+        {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:ofrecer_pokemon_intercambio, room_id, usuario, pokemon_id}, _from, state) do
+    case Map.fetch(state.intercambios, room_id) do
+      {:ok, pid} -> {:reply, Intercambio.ofrecer_pokemon(pid, usuario, pokemon_id), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:confirmar_intercambio, room_id, usuario}, _from, state) do
+    case Map.fetch(state.intercambios, room_id) do
+      {:ok, pid} -> {:reply, Intercambio.confirmar_intercambio(pid, usuario), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:cancelar_intercambio, room_id, usuario}, _from, state) do
+    case Map.fetch(state.intercambios, room_id) do
+      {:ok, pid} -> {:reply, Intercambio.cancelar_intercambio(pid, usuario), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  def handle_call({:obtener_intercambio_estado, room_id}, _from, state) do
+    case Map.fetch(state.intercambios, room_id) do
+      {:ok, pid} -> {:reply, Intercambio.obtener_estado(pid), state}
+      :error -> {:reply, {:error, :sala_no_existe}, state}
+    end
+  end
+
+  @impl true
+  def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
+    case Map.fetch(state.monitors, ref) do
+      {:ok, {type, room_id}} ->
+        monitors = Map.delete(state.monitors, ref)
+
+        state =
+          case type do
+            :batalla -> %{state | batallas: Map.delete(state.batallas, room_id), monitors: monitors}
+            :intercambio -> %{state | intercambios: Map.delete(state.intercambios, room_id), monitors: monitors}
+          end
+
+        {:noreply, state}
+
+      :error ->
+        {:noreply, state}
+    end
+  end
+end
+

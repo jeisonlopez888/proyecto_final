@@ -1,0 +1,18 @@
+{
+  "sobre_basico": {
+    "nombre": "Sobre básico",
+    "precio": 100,
+    "comun": 70,
+    "raro": 25,
+    "epico": 5,
+    "descripcion": "3 Pokémon aleatorios"
+  },
+  "sobre_avanzado": {
+    "nombre": "Sobre avanzado",
+    "precio": 250,
+    "comun": 40,
+    "raro": 45,
+    "epico": 15,
+    "descripcion": "3 Pokémon aleatorios"
+  }
+}
