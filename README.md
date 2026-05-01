@@ -63,6 +63,22 @@ PokemonBattle.Servidor.comando("texto del comando")
 
 La respuesta suele ser `{:ok, "mensaje"}` o `{:error, "mensaje"}`.
 
+### Modo principiante (recomendado para sustentar)
+
+Si quieres mostrar una version mas simple (sin memorizar todos los comandos de texto),
+usa el modulo `PokemonBattle.ComandosBasicos`:
+
+```elixir
+PokemonBattle.ComandosBasicos.iniciar("ana", "1234")
+PokemonBattle.ComandosBasicos.perfil()
+PokemonBattle.ComandosBasicos.inventario()
+PokemonBattle.ComandosBasicos.tienda()
+PokemonBattle.ComandosBasicos.ayuda()
+```
+
+Esta capa usa solo conceptos basicos (strings, listas, tuplas y Enum) pero conserva
+la arquitectura recomendada por debajo (`Servidor`, `GenServer`, `Supervisor`, archivos JSON).
+
 ---
 
 ## Limitación del `Servidor`: una sesión a la vez

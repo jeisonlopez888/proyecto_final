@@ -75,6 +75,31 @@ Módulo raíz del paquete Mix (plantilla). No participa en la lógica del juego.
 
 ---
 
+## `PokemonBattle.ComandosBasicos`
+
+**Propósito:** capa simplificada para usar el proyecto con funciones fáciles (nivel principiante), delegando internamente al `Servidor`.
+
+| Función | Qué hace y para qué sirve |
+|---------|---------------------------|
+| `iniciar/2` | Inicia sesión o registra automáticamente usando texto de comando por dentro. |
+| `salir/0` | Cierra la sesión actual. |
+| `perfil/0` | Consulta perfil del usuario logueado. |
+| `inventario/0` | Muestra inventario del usuario logueado. |
+| `tienda/0` | Muestra catálogo de sobres y probabilidades. |
+| `comprar_sobre/1` | Compra sobre por tipo (`basico`, `avanzado`). |
+| `abrir_sobre/0` | Abre el próximo sobre pendiente. |
+| `crear_equipo/2` | Crea equipo a partir de lista de IDs (convierte a string CSV). |
+| `usar_equipo/1` | Marca equipo activo. |
+| `crear_sala/0` | Crea sala de batalla. |
+| `unirse_sala/1` | Une usuario logueado a una sala. |
+| `iniciar_batalla/1` | Inicia combate en la sala. |
+| `ataque/1` | Envía ataque con id de movimiento. |
+| `cambiar/1` | Solicita cambio de Pokémon por id de instancia. |
+| `ayuda/0` | Devuelve lista de comandos básicos en texto. |
+| `comandos_principiante/0` | Lista de comandos de práctica (para usar con `Enum`). |
+
+---
+
 ## `PokemonBattle.SistemaSobres`
 
 **Propósito:** compra y apertura de sobres; generación de Pokémon según rareza y movimientos.
