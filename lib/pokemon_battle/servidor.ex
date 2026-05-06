@@ -73,9 +73,21 @@ defmodule PokemonBattle.Servidor do
             %{} = perfil ->
               n = perfil["sobres_sin_abrir"] || 0
               inv = length(perfil["inventario_pokemon_ids"] || [])
+              der = perfil["derrotas"] || 0
+              acum = perfil["monedas_acumuladas"] || 0
+              eq = perfil["equipo_activo"]
+
+              eq_txt =
+                if eq == nil or eq == "", do: "(ninguno — elige uno en Equipos)", else: to_string(eq)
 
               {:ok,
-               "=== Perfil de #{usuario} ===\nMonedas: #{perfil["monedas"] || 0}\nSobres pendientes: #{n}\nPokémon en inventario: #{inv}\nVictorias: #{perfil["victorias"] || 0}"}
+               "=== Perfil de #{usuario} ===\n" <>
+                 "Monedas actuales: #{perfil["monedas"] || 0}\n" <>
+                 "Monedas ganadas en total (histórico): #{acum}\n" <>
+                 "Sobres sin abrir (contador): #{n}\n" <>
+                 "Pokémon en inventario: #{inv}\n" <>
+                 "Victorias: #{perfil["victorias"] || 0} | Derrotas: #{der}\n" <>
+                 "Equipo activo para batalla: #{eq_txt}"}
 
             {:error, reason} ->
               {:error, "Perfil: #{razon_a_str(reason)}"}

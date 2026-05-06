@@ -91,3 +91,39 @@
 2026-04-30T03:00:54.902000Z [S-1004] Batalla iniciada por victor_5956
 2026-04-30T03:00:54.902000Z [S-1004] perdedor_5988 se rinde. Ganador: victor_5956
 2026-04-30T03:00:55.085000Z [I-1001] Intercambio completo: inter_a_6020(114) <-> inter_b_6052(115)
+2026-05-06T04:39:11.189000Z [I-1001] Intercambio completo: inter_a_1701(118) <-> inter_b_1733(119)
+2026-05-06T04:39:11.515000Z [S-1001] Batalla iniciada por victor_1797
+2026-05-06T04:39:11.515000Z [S-1001] perdedor_1829 se rinde. Ganador: victor_1797
+2026-05-06T04:39:11.857000Z [S-1002] Batalla iniciada por p1a_1861
+2026-05-06T04:39:11.858000Z [S-1003] Batalla iniciada por p2a_1925
+2026-05-06T04:39:11.858000Z [S-1002] Ronda 1. Orden: p1a_1861, p1b_1893
+2026-05-06T04:39:11.858000Z [S-1002] p1a_1861 usa rayo contra p1b_1893. Daño: 15
+2026-05-06T04:39:11.858000Z [S-1002] p1b_1893 usa hidrobomba contra p1a_1861. Daño: 3
+2026-05-06T04:39:11.858000Z [S-1003] Ronda 1. Orden: p2b_1957, p2a_1925
+2026-05-06T04:39:11.858000Z [S-1003] p2b_1957 usa llama contra p2a_1925. Daño: 15
+2026-05-06T04:39:11.858000Z [S-1003] p2a_1925 usa latigo_cepa contra p2b_1957. Daño: 2
+2026-05-06T04:39:11.859000Z [S-1002] Jugador cae. Ganador: p1a_1861
+2026-05-06T04:39:11.859000Z [S-1003] Jugador cae. Ganador: p2a_1925
+2026-05-06T04:39:13.068000Z [S-1004] Batalla iniciada por ana_1474
+2026-05-06T04:39:13.068000Z [S-1004] Ronda 1. Orden: ana_1474, luis_1506
+2026-05-06T04:39:13.068000Z [S-1004] ana_1474 usa rayo contra luis_1506. Daño: 15
+2026-05-06T04:39:13.069000Z [S-1004] luis_1506 usa hidrobomba contra ana_1474. Daño: 3
+2026-05-06T04:39:13.069000Z [S-1004] Jugador cae. Ganador: ana_1474
+2026-05-06T04:51:38.841000Z [I-1001] Intercambio completo: inter_a_259(131) <-> inter_b_291(132)
+2026-05-06T04:51:39.352000Z [S-1001] Batalla iniciada por p1a_387
+2026-05-06T04:51:39.356000Z [S-1002] Batalla iniciada por p2a_451
+2026-05-06T04:51:39.356000Z [S-1001] Ronda 1. Orden: p1a_387, p1b_419
+2026-05-06T04:51:39.357000Z [S-1001] p1a_387 usa rayo contra p1b_419. Daño: 15
+2026-05-06T04:51:39.357000Z [S-1001] p1b_419 usa hidrobomba contra p1a_387. Daño: 3
+2026-05-06T04:51:39.357000Z [S-1002] Ronda 1. Orden: p2b_483, p2a_451
+2026-05-06T04:51:39.357000Z [S-1002] p2b_483 usa llama contra p2a_451. Daño: 15
+2026-05-06T04:51:39.357000Z [S-1002] p2a_451 usa latigo_cepa contra p2b_483. Daño: 2
+2026-05-06T04:51:39.357000Z [S-1001] Jugador cae. Ganador: p1a_387
+2026-05-06T04:51:39.357000Z [S-1002] Jugador cae. Ganador: p2a_451
+2026-05-06T04:51:39.677000Z [S-1003] Batalla iniciada por victor_515
+2026-05-06T04:51:39.677000Z [S-1003] perdedor_547 se rinde. Ganador: victor_515
+2026-05-06T04:51:40.040000Z [S-1004] Batalla iniciada por ana_579
+2026-05-06T04:51:40.040000Z [S-1004] Ronda 1. Orden: ana_579, luis_611
+2026-05-06T04:51:40.040000Z [S-1004] ana_579 usa rayo contra luis_611. Daño: 15
+2026-05-06T04:51:40.040000Z [S-1004] luis_611 usa hidrobomba contra ana_579. Daño: 3
+2026-05-06T04:51:40.040000Z [S-1004] Jugador cae. Ganador: ana_579

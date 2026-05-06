@@ -37,6 +37,41 @@ mix compile
 
 ---
 
+## Menú interactivo (recomendado para jugar)
+
+### Cómo iniciarlo (Windows)
+
+1. Abre **PowerShell** o **cmd**.
+2. Ve a la carpeta del proyecto (donde está `mix.exs`):
+
+   ```powershell
+   Set-Location c:\Users\User\proyecto_final
+   ```
+
+3. (Solo la primera vez o si faltan librerías) `mix deps.get`
+4. Ejecuta el juego con menú:
+
+   ```powershell
+   mix jugar
+   ```
+
+5. En pantalla verás números: **1** iniciar sesión, **2** crear entrenador (primera vez), **0** salir.  
+   Tras entrar, el **menú principal** lista todo: perfil y récord, inventario, tienda/sobres, equipos, batalla (crear sala, **ver salas activas**, unirse, pelear), intercambio y clasificación global. Tras cada acción, pulsa **Enter** para volver al menú.
+
+**Alternativa** (mismo menú desde Elixir interactivo):
+
+```powershell
+iex.bat -S mix
+```
+
+```elixir
+PokemonBattle.MenuJuego.iniciar()
+```
+
+Por debajo el menú usa `PokemonBattle.Servidor` (misma lógica que los comandos de texto).
+
+---
+
 ## Cómo abrir IEx (importante en Windows / PowerShell)
 
 En **PowerShell**, `iex` es el alias de `Invoke-Expression`, **no** es Elixir. Usa:

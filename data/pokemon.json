@@ -32,6 +32,21 @@
     }
   },
   "instancias": {
+    "127": {
+      "ataque": 40,
+      "defensa": 300,
+      "dueño_original": "p2a_1925",
+      "especie": "bulbasaur",
+      "id": 127,
+      "movimientos": [
+        "latigo_cepa",
+        "rayo_solar",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 5
+    },
     "49": {
       "ataque": 45,
       "defensa": 100,
@@ -137,6 +152,21 @@
       "rareza": "raro",
       "velocidad": 73
     },
+    "117": {
+      "ataque": 5,
+      "defensa": 5,
+      "dueño_original": "trainer_test_1669",
+      "especie": "rattata",
+      "id": 117,
+      "movimientos": [
+        "m1",
+        "m2",
+        "m3",
+        "m4"
+      ],
+      "rareza": "comun",
+      "velocidad": 5
+    },
     "109": {
       "ataque": 50,
       "defensa": 300,
@@ -227,6 +257,21 @@
       "rareza": "comun",
       "velocidad": 10
     },
+    "119": {
+      "ataque": 45,
+      "defensa": 100,
+      "dueño_original": "inter_b_1733",
+      "especie": "squirtle",
+      "id": 119,
+      "movimientos": [
+        "hidrobomba",
+        "pistola_agua",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 20
+    },
     "32": {
       "ataque": 50,
       "defensa": 300,
@@ -271,6 +316,21 @@
       ],
       "rareza": "raro",
       "velocidad": 73
+    },
+    "121": {
+      "ataque": 58,
+      "defensa": 36,
+      "dueño_original": "sobres_1765",
+      "especie": "rattata",
+      "id": 121,
+      "movimientos": [
+        "placaje",
+        "Destructor",
+        "latigo_cepa",
+        "Terremoto"
+      ],
+      "rareza": "comun",
+      "velocidad": 74
     },
     "50": {
       "ataque": 55,
@@ -332,6 +392,21 @@
       "rareza": "comun",
       "velocidad": 5
     },
+    "144": {
+      "ataque": 50,
+      "defensa": 300,
+      "dueño_original": "ana_579",
+      "especie": "pikachu",
+      "id": 144,
+      "movimientos": [
+        "impactrueno",
+        "rayo",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 100
+    },
     "42": {
       "ataque": 50,
       "defensa": 300,
@@ -346,6 +421,21 @@
       ],
       "rareza": "comun",
       "velocidad": 100
+    },
+    "145": {
+      "ataque": 40,
+      "defensa": 300,
+      "dueño_original": "luis_611",
+      "especie": "squirtle",
+      "id": 145,
+      "movimientos": [
+        "hidrobomba",
+        "pistola_agua",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 10
     },
     "107": {
       "ataque": 40,
@@ -617,6 +707,36 @@
       "rareza": "comun",
       "velocidad": 72
     },
+    "124": {
+      "ataque": 70,
+      "defensa": 120,
+      "dueño_original": "perdedor_1829",
+      "especie": "charmander",
+      "id": 124,
+      "movimientos": [
+        "llama",
+        "ascuas",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 25
+    },
+    "135": {
+      "ataque": 59,
+      "defensa": 43,
+      "dueño_original": "sobres_355",
+      "especie": "pikachu",
+      "id": 135,
+      "movimientos": [
+        "impactrueno",
+        "rayo",
+        "rayo_solar",
+        "ataque_rapido"
+      ],
+      "rareza": "comun",
+      "velocidad": 96
+    },
     "77": {
       "ataque": 50,
       "defensa": 300,
@@ -827,6 +947,21 @@
       "rareza": "raro",
       "velocidad": 73
     },
+    "146": {
+      "ataque": 63,
+      "defensa": 46,
+      "dueño_original": "ana",
+      "especie": "pikachu",
+      "id": 146,
+      "movimientos": [
+        "rayo",
+        "impactrueno",
+        "Golpe_aereo",
+        "rayo_solar"
+      ],
+      "rareza": "raro",
+      "velocidad": 103
+    },
     "57": {
       "ataque": 49,
       "defensa": 49,
@@ -841,6 +976,21 @@
       ],
       "rareza": "comun",
       "velocidad": 45
+    },
+    "134": {
+      "ataque": 10,
+      "defensa": 10,
+      "dueño_original": "alice",
+      "especie": "pikachu",
+      "id": 134,
+      "movimientos": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "rareza": "comun",
+      "velocidad": 10
     },
     "47": {
       "ataque": 10,
@@ -901,6 +1051,51 @@
       ],
       "rareza": "comun",
       "velocidad": 72
+    },
+    "130": {
+      "ataque": 40,
+      "defensa": 300,
+      "dueño_original": "luis_1506",
+      "especie": "squirtle",
+      "id": 130,
+      "movimientos": [
+        "hidrobomba",
+        "pistola_agua",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 10
+    },
+    "133": {
+      "ataque": 5,
+      "defensa": 5,
+      "dueño_original": "trainer_test_323",
+      "especie": "rattata",
+      "id": 133,
+      "movimientos": [
+        "m1",
+        "m2",
+        "m3",
+        "m4"
+      ],
+      "rareza": "comun",
+      "velocidad": 5
+    },
+    "132": {
+      "ataque": 45,
+      "defensa": 100,
+      "dueño_original": "inter_b_291",
+      "especie": "squirtle",
+      "id": 132,
+      "movimientos": [
+        "hidrobomba",
+        "pistola_agua",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 20
     },
     "98": {
       "ataque": 70,
@@ -1067,6 +1262,66 @@
       "rareza": "comun",
       "velocidad": 30
     },
+    "126": {
+      "ataque": 40,
+      "defensa": 300,
+      "dueño_original": "p1b_1893",
+      "especie": "squirtle",
+      "id": 126,
+      "movimientos": [
+        "hidrobomba",
+        "pistola_agua",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 5
+    },
+    "140": {
+      "ataque": 40,
+      "defensa": 300,
+      "dueño_original": "p2a_451",
+      "especie": "bulbasaur",
+      "id": 140,
+      "movimientos": [
+        "latigo_cepa",
+        "rayo_solar",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 5
+    },
+    "148": {
+      "ataque": 56,
+      "defensa": 41,
+      "dueño_original": "ana",
+      "especie": "pikachu",
+      "id": 148,
+      "movimientos": [
+        "rayo",
+        "impactrueno",
+        "Golpe_aereo",
+        "pistola_agua"
+      ],
+      "rareza": "comun",
+      "velocidad": 92
+    },
+    "137": {
+      "ataque": 59,
+      "defensa": 49,
+      "dueño_original": "sobres_355",
+      "especie": "charmander",
+      "id": 137,
+      "movimientos": [
+        "ascuas",
+        "llama",
+        "Hiperrayo",
+        "rayo_solar"
+      ],
+      "rareza": "raro",
+      "velocidad": 73
+    },
     "115": {
       "ataque": 45,
       "defensa": 100,
@@ -1112,6 +1367,21 @@
       "rareza": "comun",
       "velocidad": 100
     },
+    "123": {
+      "ataque": 80,
+      "defensa": 120,
+      "dueño_original": "victor_1797",
+      "especie": "bulbasaur",
+      "id": 123,
+      "movimientos": [
+        "rayo_solar",
+        "latigo_cepa",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 30
+    },
     "89": {
       "ataque": 58,
       "defensa": 36,
@@ -1126,6 +1396,21 @@
       ],
       "rareza": "comun",
       "velocidad": 74
+    },
+    "138": {
+      "ataque": 50,
+      "defensa": 300,
+      "dueño_original": "p1a_387",
+      "especie": "pikachu",
+      "id": 138,
+      "movimientos": [
+        "impactrueno",
+        "rayo",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 90
     },
     "71": {
       "ataque": 50,
@@ -1172,6 +1457,21 @@
       "rareza": "comun",
       "velocidad": 10
     },
+    "116": {
+      "ataque": 10,
+      "defensa": 10,
+      "dueño_original": "alice",
+      "especie": "pikachu",
+      "id": 116,
+      "movimientos": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "rareza": "comun",
+      "velocidad": 10
+    },
     "79": {
       "ataque": 80,
       "defensa": 120,
@@ -1201,6 +1501,21 @@
       ],
       "rareza": "comun",
       "velocidad": 5
+    },
+    "143": {
+      "ataque": 70,
+      "defensa": 120,
+      "dueño_original": "perdedor_547",
+      "especie": "charmander",
+      "id": 143,
+      "movimientos": [
+        "llama",
+        "ascuas",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 25
     },
     "18": {
       "ataque": 45,
@@ -1277,6 +1592,21 @@
       "rareza": "comun",
       "velocidad": 30
     },
+    "131": {
+      "ataque": 50,
+      "defensa": 100,
+      "dueño_original": "inter_a_259",
+      "especie": "pikachu",
+      "id": 131,
+      "movimientos": [
+        "impactrueno",
+        "rayo",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 40
+    },
     "12": {
       "ataque": 50,
       "defensa": 100,
@@ -1322,6 +1652,36 @@
       "rareza": "comun",
       "velocidad": 96
     },
+    "136": {
+      "ataque": 58,
+      "defensa": 36,
+      "dueño_original": "sobres_355",
+      "especie": "rattata",
+      "id": 136,
+      "movimientos": [
+        "placaje",
+        "Destructor",
+        "latigo_cepa",
+        "Terremoto"
+      ],
+      "rareza": "comun",
+      "velocidad": 74
+    },
+    "141": {
+      "ataque": 50,
+      "defensa": 300,
+      "dueño_original": "p2b_483",
+      "especie": "charmander",
+      "id": 141,
+      "movimientos": [
+        "llama",
+        "ascuas",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 90
+    },
     "81": {
       "ataque": 59,
       "defensa": 43,
@@ -1351,6 +1711,21 @@
       ],
       "rareza": "comun",
       "velocidad": 65
+    },
+    "139": {
+      "ataque": 40,
+      "defensa": 300,
+      "dueño_original": "p1b_419",
+      "especie": "squirtle",
+      "id": 139,
+      "movimientos": [
+        "hidrobomba",
+        "pistola_agua",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 5
     },
     "92": {
       "ataque": 40,
@@ -1397,6 +1772,21 @@
       "rareza": "comun",
       "velocidad": 10
     },
+    "118": {
+      "ataque": 50,
+      "defensa": 100,
+      "dueño_original": "inter_a_1701",
+      "especie": "pikachu",
+      "id": 118,
+      "movimientos": [
+        "impactrueno",
+        "rayo",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 40
+    },
     "65": {
       "ataque": 70,
       "defensa": 120,
@@ -1411,6 +1801,36 @@
       ],
       "rareza": "comun",
       "velocidad": 25
+    },
+    "122": {
+      "ataque": 59,
+      "defensa": 49,
+      "dueño_original": "sobres_1765",
+      "especie": "charmander",
+      "id": 122,
+      "movimientos": [
+        "ascuas",
+        "llama",
+        "Hiperrayo",
+        "rayo_solar"
+      ],
+      "rareza": "raro",
+      "velocidad": 73
+    },
+    "142": {
+      "ataque": 80,
+      "defensa": 120,
+      "dueño_original": "victor_515",
+      "especie": "bulbasaur",
+      "id": 142,
+      "movimientos": [
+        "rayo_solar",
+        "latigo_cepa",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 30
     },
     "17": {
       "ataque": 50,
@@ -1502,6 +1922,21 @@
       "rareza": "comun",
       "velocidad": 10
     },
+    "128": {
+      "ataque": 50,
+      "defensa": 300,
+      "dueño_original": "p2b_1957",
+      "especie": "charmander",
+      "id": 128,
+      "movimientos": [
+        "llama",
+        "ascuas",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 90
+    },
     "20": {
       "ataque": 5,
       "defensa": 5,
@@ -1577,6 +2012,21 @@
       "rareza": "comun",
       "velocidad": 90
     },
+    "125": {
+      "ataque": 50,
+      "defensa": 300,
+      "dueño_original": "p1a_1861",
+      "especie": "pikachu",
+      "id": 125,
+      "movimientos": [
+        "impactrueno",
+        "rayo",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 90
+    },
     "26": {
       "ataque": 56,
       "defensa": 35,
@@ -1591,6 +2041,21 @@
       ],
       "rareza": "comun",
       "velocidad": 72
+    },
+    "147": {
+      "ataque": 59,
+      "defensa": 37,
+      "dueño_original": "ana",
+      "especie": "rattata",
+      "id": 147,
+      "movimientos": [
+        "Destructor",
+        "Hiperrayo",
+        "placaje",
+        "impactrueno"
+      ],
+      "rareza": "comun",
+      "velocidad": 76
     },
     "5": {
       "ataque": 49,
@@ -1636,6 +2101,21 @@
       ],
       "rareza": "comun",
       "velocidad": 20
+    },
+    "129": {
+      "ataque": 50,
+      "defensa": 300,
+      "dueño_original": "ana_1474",
+      "especie": "pikachu",
+      "id": 129,
+      "movimientos": [
+        "impactrueno",
+        "rayo",
+        "Destructor",
+        "Hiperrayo"
+      ],
+      "rareza": "comun",
+      "velocidad": 100
     },
     "72": {
       "ataque": 45,
@@ -1742,6 +2222,21 @@
       "rareza": "comun",
       "velocidad": 74
     },
+    "120": {
+      "ataque": 59,
+      "defensa": 43,
+      "dueño_original": "sobres_1765",
+      "especie": "pikachu",
+      "id": 120,
+      "movimientos": [
+        "impactrueno",
+        "rayo",
+        "rayo_solar",
+        "ataque_rapido"
+      ],
+      "rareza": "comun",
+      "velocidad": 96
+    },
     "61": {
       "ataque": 70,
       "defensa": 120,
@@ -1758,5 +2253,5 @@
       "velocidad": 25
     }
   },
-  "next_id": 116
+  "next_id": 149
 }

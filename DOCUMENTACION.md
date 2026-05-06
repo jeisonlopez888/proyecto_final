@@ -4,6 +4,8 @@ Este documento describe **para qué sirve cada módulo** y **qué hace cada func
 
 **Verificación:** `mix test` o `mix proyecto.verify` (misma suite). En el README, la tabla *Tests y verificación de requisitos* enlaza cada requisito con el archivo de prueba correspondiente.
 
+**Menú para jugadores:** `mix jugar` o `PokemonBattle.MenuJuego.iniciar/0` — consola guiada por números que llama al `Servidor`.
+
 ---
 
 ## Aplicación OTP
@@ -97,6 +99,18 @@ Módulo raíz del paquete Mix (plantilla). No participa en la lógica del juego.
 | `cambiar/1` | Solicita cambio de Pokémon por id de instancia. |
 | `ayuda/0` | Devuelve lista de comandos básicos en texto. |
 | `comandos_principiante/0` | Lista de comandos de práctica (para usar con `Enum`). |
+
+---
+
+## `PokemonBattle.MenuJuego`
+
+**Propósito:** menú por consola con números para jugadores; delega en `Servidor.comando/1`.
+
+| Función | Qué hace y para qué sirve |
+|---------|---------------------------|
+| `iniciar/0` | Asegura la app OTP, muestra pantalla de cuenta (sesión / crear) y el menú principal en bucle. |
+
+**Ejecución:** `mix jugar` (tarea Mix `Mix.Tasks.Jugar`) o `PokemonBattle.MenuJuego.iniciar()` desde `iex`.
 
 ---
 

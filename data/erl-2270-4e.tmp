@@ -1,28 +1,5 @@
 {
   "usuarios": {
-    "ana": {
-      "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
-      "cola_sobres": [],
-      "derrotas": 0,
-      "equipo_activo": null,
-      "equipos": {
-        "equipo1": [
-          146,
-          147,
-          148
-        ]
-      },
-      "historial": [],
-      "inventario_pokemon_ids": [
-        146,
-        147,
-        148
-      ],
-      "monedas": 0,
-      "monedas_acumuladas": 0,
-      "sobres_sin_abrir": 0,
-      "victorias": 0
-    },
     "ana_579": {
       "clave_hash": "A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=",
       "cola_sobres": [
@@ -109,8 +86,8 @@
       "inventario_pokemon_ids": [
         145
       ],
-      "monedas": 30,
-      "monedas_acumuladas": 30,
+      "monedas": 0,
+      "monedas_acumuladas": 0,
       "sobres_sin_abrir": 1,
       "victorias": 0
     },
