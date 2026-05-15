@@ -207,7 +207,23 @@ defmodule PokemonBattle.GestorSalas do
 
   @impl true
   def handle_call(:listar_salas, _from, state) do
-    {:reply, {:ok, Map.keys(state.batallas) |> Enum.sort()}, state}
+    salas =
+      state.batallas
+      |> Enum.map(fn {room_id, pid} ->
+        estado = Batalla.obtener_estado(pid)
+
+        %{
+          room_id: room_id,
+          status: estado.status,
+          jugadores: estado.jugadores,
+          jugador1: estado.jugador1,
+          jugador2: estado.jugador2,
+          ronda: estado.ronda
+        }
+      end)
+      |> Enum.sort_by(& &1.room_id)
+
+    {:reply, {:ok, salas}, state}
   end
 
   def handle_call({:crear_sala, usuario, opts}, _from, state) do
@@ -215,14 +231,18 @@ defmodule PokemonBattle.GestorSalas do
     usuario = to_string(usuario)
     caller_pid = Keyword.get(opts, :caller_pid, nil)
     random_factor = Keyword.get(opts, :random_factor, nil)
-    tiempo_turno_ms = Keyword.get(opts, :tiempo_turno_ms, 20_000)
+    tiempo_turno_ms = Keyword.get(opts, :tiempo_turno_ms, 30_000)
+    timeout_espera_ms = Keyword.get(opts, :timeout_espera_ms, 180_000)
+    tiempo_batalla_ms = Keyword.get(opts, :tiempo_batalla_ms, 300_000)
 
     args = %{
       room_id: room_id,
       jugador1: usuario,
       caller_pid: caller_pid,
       random_factor: random_factor,
-      tiempo_turno_ms: tiempo_turno_ms
+      tiempo_turno_ms: tiempo_turno_ms,
+      timeout_espera_ms: timeout_espera_ms,
+      tiempo_batalla_ms: tiempo_batalla_ms
     }
 
     {:ok, pid} = SupervisorBatallas.start_batalla(args)

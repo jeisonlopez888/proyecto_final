@@ -127,3 +127,21 @@
 2026-05-06T04:51:40.040000Z [S-1004] ana_579 usa rayo contra luis_611. Daño: 15
 2026-05-06T04:51:40.040000Z [S-1004] luis_611 usa hidrobomba contra ana_579. Daño: 3
 2026-05-06T04:51:40.040000Z [S-1004] Jugador cae. Ganador: ana_579
+2026-05-15T07:50:25.845000Z [S-1001] Batalla iniciada por p1b_1634
+2026-05-15T07:50:25.854000Z [S-1002] Batalla iniciada por p2b_1698
+2026-05-15T07:50:25.854000Z [S-1001] Ronda 1. Orden: p1a_1602, p1b_1634
+2026-05-15T07:50:25.854000Z [S-1001] p1a_1602 usa rayo contra p1b_1634. Daño: 15
+2026-05-15T07:50:25.854000Z [S-1001] p1b_1634 usa hidrobomba contra p1a_1602. Daño: 3
+2026-05-15T07:50:25.855000Z [S-1002] Ronda 1. Orden: p2b_1698, p2a_1666
+2026-05-15T07:50:25.855000Z [S-1002] p2b_1698 usa llama contra p2a_1666. Daño: 15
+2026-05-15T07:50:25.855000Z [S-1002] p2a_1666 usa latigo_cepa contra p2b_1698. Daño: 2
+2026-05-15T07:50:25.855000Z [S-1001] Fin (desconexion). Ganador: p1b_1634
+2026-05-15T07:50:25.855000Z [S-1002] Fin (desconexion). Ganador: p2b_1698
+2026-05-15T07:50:26.070000Z [S-1003] Batalla iniciada por luis_2180
+2026-05-15T07:50:26.070000Z [S-1003] Ronda 1. Orden: ana_2148, luis_2180
+2026-05-15T07:50:26.070000Z [S-1003] ana_2148 usa rayo contra luis_2180. Daño: 15
+2026-05-15T07:50:26.070000Z [S-1003] luis_2180 usa hidrobomba contra ana_2148. Daño: 3
+2026-05-15T07:50:26.070000Z [S-1003] Fin (desconexion). Ganador: luis_2180
+2026-05-15T07:50:26.286000Z [S-1004] Batalla iniciada por perdedor_2244
+2026-05-15T07:50:26.286000Z [S-1004] Fin (rendicion). Ganador: victor_2212
+2026-05-15T07:50:26.639000Z [I-1001] Intercambio completo: inter_a_2340(162) <-> inter_b_2372(163)

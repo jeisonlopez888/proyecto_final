@@ -243,8 +243,8 @@ defmodule PokemonBattle.MenuJuego do
   defp menu_batalla do
     IO.puts("")
     IO.puts("--- BATALLA (salas S-…) ---")
-    IO.puts("  Orden típico: crear o unirse → ambos con equipo activo → iniciar batalla → atacar.")
-    IO.puts("  Opción 2 te muestra las salas de batalla activas en este servidor.")
+    IO.puts("  Al unirse el 2.º jugador, la batalla empieza sola. Verás equipos y daño en consola.")
+    IO.puts("  Opción 2: salas abiertas esperando oponente (3 min máx. sin rival).")
     IO.puts("  1) Crear sala de batalla (recibes un código como S-1001)")
     IO.puts("  2) Ver salas de batalla abiertas ahora")
     IO.puts("  3) Unirse a una sala (escribe el código, ej: S-1001)")

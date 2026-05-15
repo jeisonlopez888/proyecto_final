@@ -6,6 +6,7 @@ defmodule PokemonBattle.Batalla do
     lo marca la **velocidad** del Pokémon activo de cada uno.
   - Acciones: ataque (id de movimiento), cambio de Pokémon o rendición.
   - Al terminar, actualiza victorias/derrotas, monedas y puede persistir cambios de HP en las instancias.
+  - Timeouts: 3 min sin oponente, 30 s por turno, 5 min máximo de batalla (gana quien menos daño recibió).
 
   La API pública recibe el `pid` del proceso de sala devuelto por el gestor de salas.
   """
@@ -14,76 +15,63 @@ defmodule PokemonBattle.Batalla do
 
   alias PokemonBattle.MotorCombate
   alias PokemonBattle.Persistencia
+  alias PokemonBattle.FormatoConsola
 
   @win_reward 100
   @participacion_perdedor 30
+  @default_tiempo_turno_ms 30_000
+  @default_tiempo_batalla_ms 300_000
+  @default_timeout_espera_ms 180_000
 
   defstruct room_id: nil,
             jugador1: nil,
             jugador2: nil,
             status: :esperando_jugador2,
             jugadores: [],
-            monitors: %{}, # usuario => monitor_ref
+            monitors: %{},
+            sesiones: %{},
             moves_index: %{},
-            equipo_por_usuario: %{}, # usuario => equipo
-            acciones_pendientes: %{}, # usuario => accion
+            equipo_por_usuario: %{},
+            acciones_pendientes: %{},
+            daño_recibido: %{},
             ronda: 1,
             ultimo_orden: [],
             random_factor: nil,
-            tiempo_turno_ms: 20_000
+            tiempo_turno_ms: @default_tiempo_turno_ms,
+            tiempo_batalla_ms: @default_tiempo_batalla_ms,
+            timeout_espera_ms: @default_timeout_espera_ms,
+            timer_espera_ref: nil,
+            timer_batalla_ref: nil,
+            timer_turno_ref: nil,
+            ronda_turno_timer: nil
 
   # =========================
   # API pública
   # =========================
 
-  @doc """
-  Une al segundo jugador a la sala. Opcionalmente monitoriza `caller_pid` para cerrar si cae la sesión de consola.
-  """
   def unirse(pid, usuario, caller_pid \\ nil) do
     GenServer.call(pid, {:unirse, usuario, caller_pid})
   end
 
-  @doc """
-  Arranca el combate: valida equipos activos de ambos jugadores y entra en el bucle de rondas.
-  """
   def iniciar(pid, usuario_iniciador) do
     GenServer.call(pid, {:iniciar, usuario_iniciador})
   end
 
-  @doc """
-  Encola ataque del `usuario` con el movimiento indicado (debe ser legal para su Pokémon activo).
-  """
   def ataque(pid, usuario, movimiento_id) do
     GenServer.call(pid, {:ataque, usuario, movimiento_id})
   end
 
-  @doc """
-  Encola cambio de Pokémon activo del `usuario` hacia la instancia `pokemon_id` de su equipo en batalla.
-  """
   def cambiar(pid, usuario, pokemon_id) do
     GenServer.call(pid, {:cambiar, usuario, pokemon_id})
   end
 
-  @doc """
-  El `usuario` abandona la batalla; el oponente gana y se aplican recompensas y persistencia.
-  """
   def rendirse(pid, usuario) do
     GenServer.call(pid, {:rendirse, usuario})
   end
 
-  @doc """
-  Devuelve la lista ordenada de quién actuó primero en la última ronda resuelta (por velocidad). Útil en tests.
-  """
   def obtener_ultimo_orden(pid), do: GenServer.call(pid, :obtener_ultimo_orden)
 
-  @doc """
-  Devuelve un mapa con el estado actual de la batalla (jugadores, HP, turno, etc.) para depuración o interfaz.
-  """
   def obtener_estado(pid), do: GenServer.call(pid, :obtener_estado)
-
-  # =========================
-  # GenServer callbacks
-  # =========================
 
   def start_link(%{room_id: _room_id} = args) do
     GenServer.start_link(__MODULE__, args, [])
@@ -102,18 +90,14 @@ defmodule PokemonBattle.Batalla do
   def init(%{room_id: room_id, jugador1: jugador1} = args) do
     random_factor = Map.get(args, :random_factor, nil)
     caller_pid = Map.get(args, :caller_pid, nil)
-    tiempo_turno_ms = Map.get(args, :tiempo_turno_ms, 20_000)
+    tiempo_turno_ms = Map.get(args, :tiempo_turno_ms, @default_tiempo_turno_ms)
+    tiempo_batalla_ms = Map.get(args, :tiempo_batalla_ms, @default_tiempo_batalla_ms)
+    timeout_espera_ms = Map.get(args, :timeout_espera_ms, @default_timeout_espera_ms)
 
     jugador1 = to_string(jugador1)
-    monitors = %{}
+    {monitors, sesiones} = registrar_sesion(%{}, %{}, jugador1, caller_pid)
 
-    monitors =
-      if is_pid(caller_pid) do
-        ref = Process.monitor(caller_pid)
-        Map.put(monitors, jugador1, ref)
-      else
-        monitors
-      end
+    timer_espera_ref = Process.send_after(self(), :timeout_espera_oponente, timeout_espera_ms)
 
     state = %__MODULE__{
       room_id: to_string(room_id),
@@ -122,12 +106,17 @@ defmodule PokemonBattle.Batalla do
       status: :esperando_jugador2,
       jugadores: [jugador1],
       monitors: monitors,
+      sesiones: sesiones,
       equipo_por_usuario: %{},
       acciones_pendientes: %{},
+      daño_recibido: %{jugador1 => 0},
       ronda: 1,
       ultimo_orden: [],
       random_factor: random_factor,
-      tiempo_turno_ms: tiempo_turno_ms
+      tiempo_turno_ms: tiempo_turno_ms,
+      tiempo_batalla_ms: tiempo_batalla_ms,
+      timeout_espera_ms: timeout_espera_ms,
+      timer_espera_ref: timer_espera_ref
     }
 
     {:ok, state}
@@ -138,7 +127,7 @@ defmodule PokemonBattle.Batalla do
     usuario = to_string(usuario)
 
     cond do
-      state.status != :esperando_jugador2 ->
+      state.status not in [:esperando_jugador2, :lista_para_iniciar] ->
         {:reply, {:error, :ya_iniciada}, state}
 
       usuario in state.jugadores ->
@@ -148,61 +137,45 @@ defmodule PokemonBattle.Batalla do
         {:reply, {:error, :sala_llena}, state}
 
       true ->
-        monitors =
-          if is_pid(caller_pid) do
-            ref = Process.monitor(caller_pid)
-            Map.put(state.monitors, usuario, ref)
-          else
-            state.monitors
-          end
+        {monitors, sesiones} = registrar_sesion(state.monitors, state.sesiones, usuario, caller_pid)
 
-        state2 = %{
-          state
-          | jugador2: usuario,
-            jugadores: [hd(state.jugadores), usuario],
-            monitors: monitors
-        }
+        state2 =
+          cancelar_timer_espera(%{
+            state
+            | jugador2: usuario,
+              jugadores: [hd(state.jugadores), usuario],
+              monitors: monitors,
+              sesiones: sesiones,
+              daño_recibido: Map.put(state.daño_recibido, usuario, 0),
+              status: :lista_para_iniciar
+          })
 
-        {:reply, {:ok, :unido}, state2}
+        notificar(
+          state2,
+          "¡#{usuario} se unió a la sala #{state2.room_id}! La batalla va a comenzar…"
+        )
+
+        {_reply, state3} = iniciar_combate_interno(state2, usuario)
+
+        {:reply, {:ok, :unido}, state3}
     end
   end
 
   @impl true
   def handle_call({:iniciar, usuario_iniciador}, _from, state) do
     cond do
-      state.status != :esperando_jugador2 ->
-        {:reply, {:error, :ya_iniciada}, state}
+      state.status == :en_progreso ->
+        {:reply, {:ok, %{estado: :en_progreso, resumen: resumen_estado(state)}}, state}
+
+      state.status == :terminada ->
+        {:reply, {:error, :batalla_terminada}, state}
 
       length(state.jugadores) != 2 ->
         {:reply, {:error, :faltan_jugadores}, state}
 
       true ->
-        [u1, u2] = state.jugadores
-
-        with {:ok, moves_index} <- cargar_moves_index(),
-             {:ok, equipo_u1} <- cargar_equipo_de_usuario(u1),
-             {:ok, equipo_u2} <- cargar_equipo_de_usuario(u2) do
-          Persistencia.append_battle_log(
-            "#{DateTime.utc_now() |> DateTime.to_iso8601()} [#{state.room_id}] Batalla iniciada por #{to_string(usuario_iniciador)}"
-          )
-
-          state2 = %{
-            state
-            | status: :en_progreso,
-              moves_index: moves_index,
-              equipo_por_usuario: %{
-                u1 => equipo_u1,
-                u2 => equipo_u2
-              },
-              acciones_pendientes: %{},
-              ronda: 1
-          }
-
-          {:reply, {:ok, %{estado: :en_progreso, jugadores: state2.jugadores}}, state2}
-        else
-          {:error, reason} ->
-            {:reply, {:error, reason}, state}
-        end
+        {reply, state2} = iniciar_combate_interno(state, usuario_iniciador)
+        {:reply, reply, state2}
     end
   end
 
@@ -233,17 +206,15 @@ defmodule PokemonBattle.Batalla do
             {:reply, {:error, :movimiento_inexistente}, state}
 
           true ->
-            state2 = %{
-              state
-              | acciones_pendientes: Map.put(state.acciones_pendientes, usuario, {:ataque, movimiento_id})
-            }
+            state2 =
+              cancelar_timer_turno(%{
+                state
+                | acciones_pendientes:
+                    Map.put(state.acciones_pendientes, usuario, {:ataque, movimiento_id})
+              })
 
-            if map_size(state2.acciones_pendientes) == 2 do
-              {reply, nuevo_estado} = resolver_turno(state2)
-              {:reply, reply, nuevo_estado}
-            else
-              {:reply, {:ok, :esperando_oponente}, state2}
-            end
+            {:reply, reply, state3} = respuesta_tras_accion(state2)
+            {:reply, reply, state3}
         end
     end
   end
@@ -270,17 +241,15 @@ defmodule PokemonBattle.Batalla do
         {:reply, {:error, :pokemon_no_vivo}, state}
 
       true ->
-        state2 = %{
-          state
-          | acciones_pendientes: Map.put(state.acciones_pendientes, usuario, {:cambiar, pokemon_id})
-        }
+        state2 =
+          cancelar_timer_turno(%{
+            state
+            | acciones_pendientes:
+                Map.put(state.acciones_pendientes, usuario, {:cambiar, pokemon_id})
+          })
 
-        if map_size(state2.acciones_pendientes) == 2 do
-          {reply, nuevo_estado} = resolver_turno(state2)
-          {:reply, reply, nuevo_estado}
-        else
-          {:reply, {:ok, :esperando_oponente}, state2}
-        end
+        {:reply, reply, state3} = respuesta_tras_accion(state2)
+        {:reply, reply, state3}
     end
   end
 
@@ -297,20 +266,8 @@ defmodule PokemonBattle.Batalla do
 
       true ->
         ganador = oponente_de(state, usuario)
-
-        Persistencia.append_battle_log(
-          "#{DateTime.utc_now() |> DateTime.to_iso8601()} [#{state.room_id}] #{usuario} se rinde. Ganador: #{ganador}"
-        )
-
-        registrar_resultado_batalla(ganador, usuario)
-
-        state2 = %{
-          state
-          | status: :terminada,
-            acciones_pendientes: %{}
-        }
-
-        {:reply, {:ok, %{ganador: ganador}}, state2}
+        state2 = finalizar_batalla(state, ganador, usuario, :rendicion)
+        {:reply, {:ok, %{ganador: ganador, estado: resumen_estado(state2)}}, state2}
     end
   end
 
@@ -325,35 +282,149 @@ defmodule PokemonBattle.Batalla do
   end
 
   @impl true
-  def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
-    # Forfeit por salida del proceso (cuando el cliente está siendo monitoreado).
-    # Nota: para esta entrega no mapeamos exactamente el usuario caído.
-    if state.status == :en_progreso and length(state.jugadores) == 2 do
-      [u1, u2] = state.jugadores
-      ganador = u1
-      perdedor = u2
-
-      Persistencia.append_battle_log(
-        "#{DateTime.utc_now() |> DateTime.to_iso8601()} [#{state.room_id}] Jugador cae. Ganador: #{ganador}"
+  def handle_info(:timeout_espera_oponente, state) do
+    if state.status == :esperando_jugador2 do
+      notificar(
+        state,
+        "La sala #{state.room_id} se cerró: nadie se unió en 3 minutos (falta de contrincante)."
       )
 
-      registrar_resultado_batalla(ganador, perdedor)
-
-      {:noreply, %{state | status: :terminada, acciones_pendientes: %{}}}
+      {:stop, :normal, state}
     else
       {:noreply, state}
     end
   end
 
+  def handle_info(:timeout_batalla, state) do
+    if state.status == :en_progreso do
+      [u1, u2] = state.jugadores
+      d1 = Map.get(state.daño_recibido, u1, 0)
+      d2 = Map.get(state.daño_recibido, u2, 0)
+
+      {ganador, perdedor} =
+        cond do
+          d1 < d2 -> {u1, u2}
+          d2 < d1 -> {u2, u1}
+          true -> if :rand.uniform() == 1, do: {u1, u2}, else: {u2, u1}
+        end
+
+      notificar(
+        state,
+        "Tiempo de batalla agotado (5 min). Daño recibido — #{u1}: #{d1}, #{u2}: #{d2}. " <>
+          "Gana #{ganador} (menor daño sufrido)."
+      )
+
+      state2 = finalizar_batalla(state, ganador, perdedor, :tiempo)
+      {:noreply, state2}
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_info({:timeout_turno, ronda}, state) do
+    if state.status == :en_progreso and state.ronda == ronda do
+      state2 = aplicar_timeout_turno(state)
+
+      case state2.status do
+        :terminada ->
+          {:noreply, state2}
+
+        :en_progreso ->
+          if map_size(state2.acciones_pendientes) == 2 do
+            {_, state3} = resolver_turno(state2)
+            {:noreply, state3}
+          else
+            {:noreply, programar_timer_turno(state2)}
+          end
+      end
+    else
+      {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
+    usuario_caido =
+      Enum.find_value(state.monitors, fn {u, r} -> if r == ref, do: u end)
+
+    state2 =
+      if usuario_caido do
+        %{state | monitors: Map.delete(state.monitors, usuario_caido), sesiones: Map.delete(state.sesiones, usuario_caido)}
+      else
+        state
+      end
+
+    if state2.status == :en_progreso and length(state2.jugadores) == 2 and usuario_caido do
+      ganador = oponente_de(state2, usuario_caido)
+      state3 = finalizar_batalla(state2, ganador, usuario_caido, :desconexion)
+      {:noreply, state3}
+    else
+      {:noreply, state2}
+    end
+  end
+
   # =========================
-  # Resolución de turnos (simultáneos)
+  # Inicio de combate
   # =========================
 
-  # Retorna {reply, nuevo_estado}
+  defp iniciar_combate_interno(state, usuario_iniciador) do
+    [u1, u2] = state.jugadores
+
+    with {:ok, moves_index} <- cargar_moves_index(),
+         {:ok, equipo_u1} <- cargar_equipo_de_usuario(u1),
+         {:ok, equipo_u2} <- cargar_equipo_de_usuario(u2) do
+      Persistencia.append_battle_log(
+        "#{DateTime.utc_now() |> DateTime.to_iso8601()} [#{state.room_id}] Batalla iniciada por #{to_string(usuario_iniciador)}"
+      )
+
+      state2 =
+        cancelar_timer_espera(%{
+          state
+          | status: :en_progreso,
+            moves_index: moves_index,
+            equipo_por_usuario: %{u1 => equipo_u1, u2 => equipo_u2},
+            acciones_pendientes: %{},
+            daño_recibido: %{u1 => 0, u2 => 0},
+            ronda: 1
+        })
+
+      timer_batalla_ref = Process.send_after(self(), :timeout_batalla, state2.tiempo_batalla_ms)
+
+      msg_equipos =
+        "=== BATALLA INICIADA en #{state2.room_id} ===\n\n" <>
+          FormatoConsola.formatear_equipo(u1, equipo_u1, moves_index) <>
+          "\n\n" <>
+          FormatoConsola.formatear_equipo(u2, equipo_u2, moves_index) <>
+          "\n\nTienes #{div(state2.tiempo_turno_ms, 1000)} s por turno. La batalla dura como máximo 5 min."
+
+      notificar(state2, msg_equipos)
+      notificar_turno(state2)
+
+      state3 = %{state2 | timer_batalla_ref: timer_batalla_ref} |> programar_timer_turno()
+
+      {{:ok, %{estado: :en_progreso, jugadores: state3.jugadores, resumen: resumen_estado(state3)}}, state3}
+    else
+      {:error, reason} -> {{:error, reason}, state}
+    end
+  end
+
+  defp respuesta_tras_accion(state) do
+    if map_size(state.acciones_pendientes) == 2 do
+      {reply, nuevo_estado} = resolver_turno(state)
+      {:reply, reply, nuevo_estado}
+    else
+      {:reply, {:ok, :esperando_oponente}, programar_timer_turno(state)}
+    end
+  end
+
+  # =========================
+  # Resolución de turnos
+  # =========================
+
   defp resolver_turno(state) do
     [u1, u2] = state.jugadores
-    a1 = state.acciones_pendientes[u1]
-    a2 = state.acciones_pendientes[u2]
+    a1 = Map.get(state.acciones_pendientes, u1, {:pasar, nil})
+    a2 = Map.get(state.acciones_pendientes, u2, {:pasar, nil})
 
     p_act_1 = pokemon_activo(state, u1)
     p_act_2 = pokemon_activo(state, u2)
@@ -371,24 +442,22 @@ defmodule PokemonBattle.Batalla do
       "#{DateTime.utc_now() |> DateTime.to_iso8601()} [#{state.room_id}] Ronda #{state.ronda}. Orden: #{Enum.join(order, ", ")}"
     )
 
-    # 1) Aplicar ataques siguiendo el orden por velocidad.
-    {state_danio, ended?, ganador} =
-      Enum.reduce_while(order, {state, false, nil}, fn actor, {st, ended, g} ->
+    {state_danio, ended?, ganador, eventos_danio} =
+      Enum.reduce_while(order, {state, false, nil, []}, fn actor, {st, ended, g, evs} ->
         if ended do
-          {:halt, {st, ended, g}}
+          {:halt, {st, ended, g, evs}}
         else
           op = oponente_de(st, actor)
 
-          case st.acciones_pendientes[actor] do
+          case Map.get(st.acciones_pendientes, actor, {:pasar, nil}) do
             {:ataque, mov_id} ->
               atacante = pokemon_activo(st, actor)
               defensor = pokemon_activo(st, op)
 
               if defensor.hp <= 0 do
-                {:cont, {st, ended, g}}
+                {:cont, {st, ended, g, evs}}
               else
                 mov = st.moves_index[mov_id]
-
                 t_atk = tipos_pokemon(atacante)
                 t_def = tipos_pokemon(defensor)
 
@@ -400,65 +469,99 @@ defmodule PokemonBattle.Batalla do
                     random_factor: st.random_factor
                   )
 
+                hp_antes = defensor.hp
+
                 Persistencia.append_battle_log(
                   "#{DateTime.utc_now() |> DateTime.to_iso8601()} [#{st.room_id}] #{actor} usa #{mov_id} contra #{op}. Daño: #{daño}"
                 )
 
                 st2 = aplicar_dano(st, op, st.equipo_por_usuario[op].activo_id, daño)
+                defensor2 = pokemon_activo(st2, op)
+
+                ev =
+                  "#{actor} → #{op}: #{mov["nombre"] || mov_id} causó #{daño} de daño (#{hp_antes} → #{defensor2.hp} HP)"
+
+                evs2 = [ev | evs]
 
                 if not pokemon_vivos?(st2, op) do
-                  registrar_resultado_batalla(actor, op)
-                  Persistencia.append_battle_log(
-                    "#{DateTime.utc_now() |> DateTime.to_iso8601()} [#{st2.room_id}] Batalla terminada. Ganador: #{actor}"
-                  )
-                  {:halt, {%{st2 | status: :terminada}, true, actor}}
+                  {:halt, {st2, true, actor, evs2}}
                 else
-                  {:cont, {st2, ended, g}}
+                  {:cont, {st2, ended, g, evs2}}
                 end
               end
 
+            {:pasar, _} ->
+              evs2 = ["#{actor} perdió su turno (sin acción a tiempo)" | evs]
+              {:cont, {st, ended, g, evs2}}
+
             _accion ->
-              {:cont, {st, ended, g}}
+              {:cont, {st, ended, g, evs}}
           end
         end
       end)
 
-    # 2) Si no terminó, aplicar cambios de Pokémon para la siguiente ronda.
     state2 =
       if ended? do
-        state_danio
+        finalizar_batalla(state_danio, ganador, oponente_de(state_danio, ganador), :knockout)
       else
         state2 = aplicar_siguiente_activos(state_danio)
         %{state2 | ultimo_orden: order, acciones_pendientes: %{}, ronda: state.ronda + 1}
       end
 
+    msg_ronda =
+      eventos_danio
+      |> Enum.reverse()
+      |> Enum.join("\n")
+
+    unless ended? do
+      notificar(
+        state2,
+        "— Ronda #{state.ronda} —\n#{msg_ronda}\n\n" <> texto_ataques_disponibles(state2)
+      )
+
+      notificar_turno(state2)
+    end
+
     reply =
       if ended? do
-        {:ok, %{estado: :terminada, ganador: ganador}}
+        {:ok, %{estado: :terminada, ganador: ganador, eventos: eventos_danio}}
       else
         {:ok,
          %{
            estado: :ronda_resuelta,
            ronda: state.ronda,
            order: order,
-           acciones: %{u1 => a1, u2 => a2}
+           acciones: %{u1 => a1, u2 => a2},
+           eventos: eventos_danio
          }}
       end
 
-    {reply, state2}
+    {reply, programar_timer_turno(state2)}
+  end
+
+  defp texto_ataques_disponibles(state) do
+    state.jugadores
+    |> Enum.map(fn u ->
+      activo = pokemon_activo(state, u)
+      movs = FormatoConsola.formatear_movimientos(activo.movimientos || [], state.moves_index)
+      danio = Map.get(state.daño_recibido, u, 0)
+      "  #{u} [#{activo.especie} HP #{activo.hp}/#{activo.hp_max}, daño recibido total: #{danio}]\n     Ataques: #{movs}"
+    end)
+    |> Enum.join("\n")
   end
 
   defp aplicar_siguiente_activos(state) do
     [u1, u2] = state.jugadores
 
     state
-    |> ajustar_activo_para_usuario(u1, state.acciones_pendientes[u1])
-    |> ajustar_activo_para_usuario(u2, state.acciones_pendientes[u2])
+    |> ajustar_activo_para_usuario(u1, Map.get(state.acciones_pendientes, u1))
+    |> ajustar_activo_para_usuario(u2, Map.get(state.acciones_pendientes, u2))
   end
 
   defp ajustar_activo_para_usuario(state, usuario, accion) do
     equipo = state.equipo_por_usuario[usuario]
     alive_ids = Enum.filter(equipo.equipo_ids, fn id -> equipo.pokemon_por_id[id].hp > 0 end)
+
     if alive_ids == [] do
       state
     else
@@ -470,19 +573,27 @@ defmodule PokemonBattle.Batalla do
 
       next_active =
         cond do
-          switch_target && switch_target in alive_ids ->
-            switch_target
-
-          equipo.pokemon_por_id[equipo.activo_id].hp > 0 ->
-            equipo.activo_id
-
-          true ->
-            hd(alive_ids)
+          switch_target && switch_target in alive_ids -> switch_target
+          equipo.pokemon_por_id[equipo.activo_id].hp > 0 -> equipo.activo_id
+          true -> hd(alive_ids)
         end
 
       equipo2 = %{equipo | activo_id: next_active}
       %{state | equipo_por_usuario: Map.put(state.equipo_por_usuario, usuario, equipo2)}
     end
+  end
+
+  defp aplicar_timeout_turno(state) do
+    [u1, u2] = state.jugadores
+    faltantes = Enum.filter([u1, u2], fn u -> not Map.has_key?(state.acciones_pendientes, u) end)
+
+    state2 =
+      Enum.reduce(faltantes, state, fn u, st ->
+        notificar(st, "¡#{u} no actuó en #{div(st.tiempo_turno_ms, 1000)} s y pierde su turno!")
+        %{st | acciones_pendientes: Map.put(st.acciones_pendientes, u, {:pasar, nil})}
+      end)
+
+    state2
   end
 
   defp pokemon_activo(state, usuario) do
@@ -496,7 +607,14 @@ defmodule PokemonBattle.Batalla do
     hp2 = max((pokemon.hp || 0) - daño, 0)
     pokemon2 = %{pokemon | hp: hp2}
     equipo2 = %{equipo | pokemon_por_id: Map.put(equipo.pokemon_por_id, pokemon_id, pokemon2)}
-    %{state | equipo_por_usuario: Map.put(state.equipo_por_usuario, usuario, equipo2)}
+
+    daño_map = Map.update(state.daño_recibido, usuario, daño, &(&1 + daño))
+
+    %{
+      state
+      | equipo_por_usuario: Map.put(state.equipo_por_usuario, usuario, equipo2),
+        daño_recibido: daño_map
+    }
   end
 
   defp pokemon_vivo?(state, usuario, pokemon_id) do
@@ -508,6 +626,91 @@ defmodule PokemonBattle.Batalla do
   defp pokemon_vivos?(state, usuario) do
     equipo = state.equipo_por_usuario[usuario]
     Enum.any?(equipo.equipo_ids, fn id -> equipo.pokemon_por_id[id].hp > 0 end)
+  end
+
+  defp finalizar_batalla(state, ganador, perdedor, motivo) do
+    state2 = cancelar_timer_turno(cancelar_timer_batalla(state))
+
+    Persistencia.append_battle_log(
+      "#{DateTime.utc_now() |> DateTime.to_iso8601()} [#{state.room_id}] Fin (#{motivo}). Ganador: #{ganador}"
+    )
+
+    registrar_resultado_batalla(ganador, perdedor)
+
+    g = Persistencia.obtener_entrenador(ganador) || %{}
+    p = Persistencia.obtener_entrenador(perdedor) || %{}
+
+    notificar(
+      state2,
+      "=== FIN DE BATALLA ===\nGanador: #{ganador} | Perdedor: #{perdedor}\n" <>
+        "Récord #{ganador}: #{g["victorias"] || 0}V / #{g["derrotas"] || 0}D\n" <>
+        "Récord #{perdedor}: #{p["victorias"] || 0}V / #{p["derrotas"] || 0}D"
+    )
+
+    %{state2 | status: :terminada, acciones_pendientes: %{}}
+  end
+
+  # =========================
+  # Timers y notificaciones
+  # =========================
+
+  defp programar_timer_turno(state) do
+    state = cancelar_timer_turno(state)
+    ref = Process.send_after(self(), {:timeout_turno, state.ronda}, state.tiempo_turno_ms)
+    %{state | timer_turno_ref: ref, ronda_turno_timer: state.ronda}
+  end
+
+  defp cancelar_timer_turno(%{timer_turno_ref: ref} = state) when is_reference(ref) do
+    Process.cancel_timer(ref)
+    %{state | timer_turno_ref: nil}
+  end
+
+  defp cancelar_timer_turno(state), do: state
+
+  defp cancelar_timer_espera(%{timer_espera_ref: ref} = state) when is_reference(ref) do
+    Process.cancel_timer(ref)
+    %{state | timer_espera_ref: nil}
+  end
+
+  defp cancelar_timer_espera(state), do: state
+
+  defp cancelar_timer_batalla(%{timer_batalla_ref: ref} = state) when is_reference(ref) do
+    Process.cancel_timer(ref)
+    %{state | timer_batalla_ref: nil}
+  end
+
+  defp cancelar_timer_batalla(state), do: state
+
+  defp notificar(state, mensaje) do
+    Enum.each(state.sesiones, fn {_u, pid} ->
+      if is_pid(pid) and Process.alive?(pid), do: send(pid, {:batalla_evento, state.room_id, mensaje})
+    end)
+
+    :ok
+  end
+
+  defp notificar_turno(state) do
+    seg = div(state.tiempo_turno_ms, 1000)
+    notificar(state, "Turno #{state.ronda}: elige ataque o cambio (#{seg} s).")
+  end
+
+  defp registrar_sesion(monitors, sesiones, usuario, caller_pid) do
+    monitors =
+      if is_pid(caller_pid) do
+        ref = Process.monitor(caller_pid)
+        Map.put(monitors, usuario, ref)
+      else
+        monitors
+      end
+
+    sesiones =
+      if is_pid(caller_pid) do
+        Map.put(sesiones, usuario, caller_pid)
+      else
+        sesiones
+      end
+
+    {monitors, sesiones}
   end
 
   # =========================
@@ -545,7 +748,6 @@ defmodule PokemonBattle.Batalla do
               if map_size(equipos) == 0 do
                 {nil, nil}
               else
-                # Si no hay `equipo_activo` elegido, tomamos el primero disponible.
                 nombre = equipos |> Map.keys() |> Enum.sort() |> hd()
                 Persistencia.guardar_entrenador(usuario, %{"equipo_activo" => nombre})
                 {nombre, equipos[nombre]}
@@ -571,17 +773,10 @@ defmodule PokemonBattle.Batalla do
 
   defp tipos_especie(data) do
     cond do
-      is_list(data["tipos"]) ->
-        data["tipos"]
-
-      is_binary(data["tipo"]) && String.contains?(data["tipo"], "/") ->
-        data["tipo"] |> String.split("/") |> Enum.map(&String.trim/1)
-
-      data["tipo"] ->
-        [data["tipo"]]
-
-      true ->
-        ["normal"]
+      is_list(data["tipos"]) -> data["tipos"]
+      is_binary(data["tipo"]) && String.contains?(data["tipo"], "/") -> data["tipo"] |> String.split("/") |> Enum.map(&String.trim/1)
+      data["tipo"] -> [data["tipo"]]
+      true -> ["normal"]
     end
   end
 
@@ -602,16 +797,12 @@ defmodule PokemonBattle.Batalla do
         else
           especie = inst["especie"]
           especie_data = catalogo_especies[especie] || %{}
-
           tipos = tipos_especie(especie_data)
           tipo_label = Enum.join(tipos, "/")
-
           rareza = inst["rareza"] || "comun"
-
           ataque = inst["ataque"] || 0
           defensa = inst["defensa"] || 0
           velocidad = inst["velocidad"] || 0
-
           hp_max = 100
 
           pokemon = %{
@@ -641,11 +832,8 @@ defmodule PokemonBattle.Batalla do
     end
   end
 
-  # =========================
-  # Utilidades
-  # =========================
-
   defp normalize_int_id(id) when is_integer(id), do: id
+
   defp normalize_int_id(id) when is_binary(id) do
     case Integer.parse(id) do
       {n, ""} -> n
@@ -662,29 +850,19 @@ defmodule PokemonBattle.Batalla do
     ganador = to_string(ganador)
     perdedor = to_string(perdedor)
 
-    # Monedas (ganador +100, perdedor +30 participación; ambas suman a monedas_acumuladas)
     Persistencia.ajustar_monedas(ganador, @win_reward)
     Persistencia.ajustar_monedas(perdedor, @participacion_perdedor)
 
-    # Contadores para clasificación
     g = Persistencia.obtener_entrenador(ganador) || %{}
     p = Persistencia.obtener_entrenador(perdedor) || %{}
 
     victorias_g = (g["victorias"] || 0) + 1
     derrotas_g = g["derrotas"] || 0
-
     victorias_p = p["victorias"] || 0
     derrotas_p = (p["derrotas"] || 0) + 1
 
-    Persistencia.guardar_entrenador(ganador, %{
-      "victorias" => victorias_g,
-      "derrotas" => derrotas_g
-    })
-
-    Persistencia.guardar_entrenador(perdedor, %{
-      "victorias" => victorias_p,
-      "derrotas" => derrotas_p
-    })
+    Persistencia.guardar_entrenador(ganador, %{"victorias" => victorias_g, "derrotas" => derrotas_g})
+    Persistencia.guardar_entrenador(perdedor, %{"victorias" => victorias_p, "derrotas" => derrotas_p})
   end
 
   defp resumen_estado(state) do
@@ -692,10 +870,14 @@ defmodule PokemonBattle.Batalla do
       room_id: state.room_id,
       status: state.status,
       jugadores: state.jugadores,
+      jugador1: state.jugador1,
+      jugador2: state.jugador2,
       ronda: state.ronda,
       ultimo_orden: state.ultimo_orden,
-      acciones_pendientes: state.acciones_pendientes
+      acciones_pendientes: state.acciones_pendientes,
+      equipo_por_usuario: state.equipo_por_usuario,
+      daño_recibido: state.daño_recibido,
+      moves_index: state.moves_index
     }
   end
 end
-

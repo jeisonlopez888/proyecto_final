@@ -15,6 +15,7 @@ defmodule PokemonBattle.Servidor do
   alias PokemonBattle.SistemaSobres
   alias PokemonBattle.GestorSalas
   alias PokemonBattle.Persistencia
+  alias PokemonBattle.FormatoConsola
 
   defstruct usuario_actual: nil,
             sala_batalla_actual: nil,
@@ -43,6 +44,14 @@ defmodule PokemonBattle.Servidor do
   @impl true
   def init(_opts) do
     {:ok, %__MODULE__{}}
+  end
+
+  @impl true
+  def handle_info({:batalla_evento, room_id, mensaje}, state) do
+    IO.puts("")
+    IO.puts("[#{room_id}] #{mensaje}")
+    IO.puts("")
+    {:noreply, state}
   end
 
   @impl true
@@ -215,10 +224,17 @@ defmodule PokemonBattle.Servidor do
 
           case GestorSalas.crear_sala(usuario, opts) do
             {:ok, room_id} ->
-              s = div(Keyword.get(opts, :tiempo_turno_ms, 20_000), 1000)
+              s = div(Keyword.get(opts, :tiempo_turno_ms, 30_000), 1000)
+              equipo_txt = texto_equipo_activo(usuario)
 
-              {:reply, {:ok, "Sala de batalla creada: #{room_id} (tiempo de turno #{s}s)."},
-               %{state | sala_batalla_actual: room_id}}
+              msg =
+                "Sala de batalla creada: #{room_id}\n" <>
+                  "Tiempo por turno: #{s}s | Espera máxima de oponente: 3 min\n" <>
+                  "Comparte el código con otro entrenador.\n\n" <>
+                  "=== Tu equipo ===\n#{equipo_txt}\n\n" <>
+                  "(Cuando se una un oponente, la batalla comenzará automáticamente.)"
+
+              {:reply, {:ok, msg}, %{state | sala_batalla_actual: room_id}}
 
             {:error, reason} ->
               {:reply, {:error, "No se pudo crear la sala: #{razon_a_str(reason)}"}, state}
@@ -228,9 +244,19 @@ defmodule PokemonBattle.Servidor do
       tokens == ["listar_salas"] ->
         con_usuario(state, fn _ ->
           case GestorSalas.listar_salas() do
-            {:ok, ids} when ids == [] -> {:ok, "No hay salas de batalla abiertas."}
-            {:ok, ids} -> {:ok, "Salas abiertas: #{Enum.join(ids, ", ")}"}
-            {:error, reason} -> {:error, "No se pudo listar: #{razon_a_str(reason)}"}
+            {:ok, salas} ->
+              disponibles =
+                Enum.filter(salas, fn s -> s.status == :esperando_jugador2 end)
+
+              if disponibles == [] and salas == [] do
+                {:ok, "No hay salas de batalla abiertas."}
+              else
+                lista = if disponibles != [], do: disponibles, else: salas
+                {:ok, FormatoConsola.formatear_salas_disponibles(lista)}
+              end
+
+            {:error, reason} ->
+              {:error, "No se pudo listar: #{razon_a_str(reason)}"}
           end
         end)
 
@@ -240,7 +266,11 @@ defmodule PokemonBattle.Servidor do
         con_usuario(state, fn usuario ->
           case GestorSalas.unirse_sala(room_id, usuario, self()) do
             {:ok, :unido} ->
-              {:reply, {:ok, "Unido a la sala #{room_id}."}, %{state | sala_batalla_actual: room_id}}
+              {:reply,
+               {:ok,
+                "Unido a la sala #{room_id}. La batalla se inició automáticamente.\n" <>
+                  "Recibirás en pantalla los equipos y el avance del combate."},
+               %{state | sala_batalla_actual: room_id}}
 
             {:error, reason} ->
               {:reply, {:error, "No se pudo unir a la sala: #{razon_a_str(reason)}"}, state}
@@ -252,20 +282,28 @@ defmodule PokemonBattle.Servidor do
 
         con_usuario(state, fn usuario ->
           case GestorSalas.iniciar_batalla(room_id, usuario) do
-            {:ok, _} ->
-              extra =
-                case GestorSalas.obtener_batalla_estado(room_id) do
-                  %{status: :en_progreso, ronda: r} ->
-                    " Turno #{r}. Nodo: #{node()}."
-
-                  _ ->
-                    ""
-                end
-
+            {:ok, %{resumen: resumen}} when is_map(resumen) ->
               {:reply,
                {:ok,
-                "Batalla iniciada en #{room_id}.#{extra} Comandos: ataque <mov>, cambiar <id>, rendirse."},
+                "Batalla iniciada en #{room_id}.\n\n" <>
+                  FormatoConsola.formatear_estado_batalla(resumen) <>
+                  "\n\nComandos: ataque <mov>, cambiar <id>, rendirse."},
                %{state | sala_batalla_actual: room_id}}
+
+            {:ok, _} ->
+              case GestorSalas.obtener_batalla_estado(room_id) do
+                %{} = e ->
+                  {:reply,
+                   {:ok,
+                    "Batalla en curso en #{room_id}.\n\n" <>
+                      FormatoConsola.formatear_estado_batalla(e) <>
+                      "\n\nComandos: ataque <mov>, cambiar <id>, rendirse."},
+                   %{state | sala_batalla_actual: room_id}}
+
+                _ ->
+                  {:reply, {:ok, "Batalla iniciada en #{room_id}."},
+                   %{state | sala_batalla_actual: room_id}}
+              end
 
             {:error, reason} ->
               {:reply, {:error, "No se pudo iniciar: #{razon_a_str(reason)}"}, state}
@@ -280,8 +318,8 @@ defmodule PokemonBattle.Servidor do
 
             room_id ->
               case GestorSalas.obtener_batalla_estado(room_id) do
-                %{status: st} = e ->
-                  {:ok, "Sala #{room_id}: estado=#{st}, ronda=#{Map.get(e, :ronda, 0)}, jugadores=#{inspect(Map.get(e, :jugadores, []))}"}
+                %{} = e ->
+                  {:ok, FormatoConsola.formatear_estado_batalla(e)}
 
                 {:error, r} ->
                   {:error, razon_a_str(r)}
@@ -299,8 +337,17 @@ defmodule PokemonBattle.Servidor do
           room_id ->
             con_usuario(state, fn usuario ->
               case GestorSalas.ataque(room_id, usuario, mov_id) do
+                {:ok, :esperando_oponente} ->
+                  {:reply, {:ok, "Ataque #{mov_id} registrado. Esperando acción del oponente…"}, state}
+
                 {:ok, meta} ->
-                  {:reply, {:ok, "Acción enviada: ataque #{mov_id}. Resultado: #{inspect(meta)}"}, state}
+                  idx = FormatoConsola.cargar_moves_index()
+
+                  {:reply,
+                   {:ok,
+                    "Ataque #{mov_id} registrado.\n" <>
+                      FormatoConsola.formatear_resultado_ronda(meta, idx)},
+                   state}
 
                 {:error, reason} ->
                   {:reply, {:error, "Ataque fallido: #{razon_a_str(reason)}"}, state}
@@ -318,8 +365,16 @@ defmodule PokemonBattle.Servidor do
           room_id ->
             con_usuario(state, fn usuario ->
               case GestorSalas.cambiar(room_id, usuario, pokemon_id) do
+                {:ok, :esperando_oponente} ->
+                  {:reply, {:ok, "Cambio a ##{pokemon_id} registrado. Esperando al oponente…"}, state}
+
                 {:ok, meta} ->
-                  {:reply, {:ok, "Acción enviada: cambiar a #{pokemon_id}. Resultado: #{inspect(meta)}"}, state}
+                  idx = FormatoConsola.cargar_moves_index()
+
+                  {:reply,
+                   {:ok,
+                    "Cambio registrado.\n" <> FormatoConsola.formatear_resultado_ronda(meta, idx)},
+                   state}
 
                 {:error, reason} ->
                   {:reply, {:error, "Cambio fallido: #{razon_a_str(reason)}"}, state}
@@ -583,6 +638,51 @@ defmodule PokemonBattle.Servidor do
 
   defp razon_a_str({:rpc, reason}), do: "error RPC al nodo del gestor: #{inspect(reason)}"
 
+  defp razon_a_str(:batalla_terminada), do: "la batalla ya terminó"
+  defp razon_a_str(:ya_iniciada), do: "la batalla ya está en curso o terminó"
   defp razon_a_str(other), do: to_string(other)
+
+  defp texto_equipo_activo(usuario) do
+    case GestorEntrenadores.perfil(usuario) do
+      %{} = perfil ->
+        equipos = perfil["equipos"] || %{}
+        activo = perfil["equipo_activo"]
+        idx = FormatoConsola.cargar_moves_index()
+        cat = Persistencia.catalogo_especies()
+
+        ids =
+          cond do
+            activo && Map.has_key?(equipos, activo) -> equipos[activo]
+            map_size(equipos) > 0 -> equipos |> Map.values() |> hd()
+            true -> []
+          end
+
+        if ids == [] or ids == nil do
+          "(Sin equipo activo — crea uno en el menú Equipos)"
+        else
+          ids
+          |> Enum.map(fn id ->
+            p = Persistencia.obtener_instancia(id)
+            esp = (p && p["especie"]) || "?"
+            ed = cat[esp] || %{}
+
+            tipo_str =
+              cond do
+                is_list(ed["tipos"]) -> Enum.join(ed["tipos"], "/")
+                ed["tipo"] -> ed["tipo"]
+                true -> "?"
+              end
+
+            movs = FormatoConsola.formatear_movimientos((p && p["movimientos"]) || [], idx)
+
+            "  ##{id} #{esp} (#{tipo_str}) Ataque #{p["ataque"]} Defensa #{p["defensa"]} Vel #{p["velocidad"]}\n     Movimientos: #{movs}"
+          end)
+          |> Enum.join("\n")
+        end
+
+      _ ->
+        "(No se pudo cargar el equipo)"
+    end
+  end
 end
 
