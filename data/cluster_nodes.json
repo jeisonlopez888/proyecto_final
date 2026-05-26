@@ -1,0 +1,18 @@
+{
+  "ana": {
+    "node": "ana@localhost",
+    "updated_at": "2026-05-20T00:50:10.205000Z"
+  },
+  "ana_test_auto": {
+    "node": "ana_test_auto@localhost",
+    "updated_at": "2026-05-20T00:47:45.365000Z"
+  },
+  "consola_452": {
+    "node": "consola_452@localhost",
+    "updated_at": "2026-05-20T00:47:18.434000Z"
+  },
+  "consola_900": {
+    "node": "consola_900@127.0.0.1",
+    "updated_at": "2026-05-20T00:53:00.318000Z"
+  }
+}

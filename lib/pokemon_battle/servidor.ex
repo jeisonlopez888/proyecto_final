@@ -66,8 +66,28 @@ defmodule PokemonBattle.Servidor do
         ["iniciar", usuario, clave] = tokens
 
         case GestorEntrenadores.iniciar(usuario, clave) do
-          {:ok, _trainer} ->
-            {:reply, {:ok, "Sesión iniciada como #{usuario}."}, %{state | usuario_actual: to_string(usuario)}}
+          {:ok, _trainer, :registrado} ->
+            nodo_msg =
+              case PokemonBattle.NodoEntrenador.al_iniciar_sesion(usuario) do
+                {:ok, extra} -> "\n#{extra}"
+                _ -> ""
+              end
+
+            {:reply,
+             {:ok,
+              "Sesión iniciada como #{usuario}. ¡Bienvenido! Tienes 1 sobre básico gratis en cola. " <>
+                "Ábrelo con el menú «Tienda y sobres» (opción 4) o el comando `abrir_sobre ultimo`.#{nodo_msg}"},
+             %{state | usuario_actual: to_string(usuario)}}
+
+          {:ok, _trainer, :existente} ->
+            nodo_msg =
+              case PokemonBattle.NodoEntrenador.al_iniciar_sesion(usuario) do
+                {:ok, extra} -> "\n#{extra}"
+                _ -> ""
+              end
+
+            {:reply, {:ok, "Sesión iniciada como #{usuario}.#{nodo_msg}"},
+             %{state | usuario_actual: to_string(usuario)}}
 
           {:error, reason} ->
             {:reply, {:error, "No se pudo iniciar sesión: #{razon_a_str(reason)}"}, state}
@@ -634,7 +654,7 @@ defmodule PokemonBattle.Servidor do
   defp razon_a_str(:pokemon_duplicado_en_equipo), do: "Pokémon duplicado en el equipo"
   defp razon_a_str(:sala_no_existe),
     do:
-      "esa sala no existe en este nodo BEAM. Dos ventanas iex = dos nodos distintos: usa un solo iex para ambos jugadores, o Node.connect/1 y la variable de entorno GESTOR_SALAS_NODE apuntando al nodo que creó la sala."
+      "esa sala no existe en ningún nodo conectado. Comprueba el código, que el otro jugador tenga sesión iniciada en otra terminal y que ambos vean el mensaje de nodo de red al entrar."
 
   defp razon_a_str({:rpc, reason}), do: "error RPC al nodo del gestor: #{inspect(reason)}"
 

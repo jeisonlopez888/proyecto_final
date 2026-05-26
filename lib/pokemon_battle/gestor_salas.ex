@@ -50,19 +50,80 @@ defmodule PokemonBattle.GestorSalas do
   @doc false
   def __local_gs_call__(msg), do: GenServer.call(__MODULE__, msg)
 
+  defp gs_call(:listar_salas) do
+    case rpc_target() do
+      nil -> listar_salas_en_cluster()
+      n when n == node() -> listar_salas_en_cluster()
+      n -> rpc_gs_call(n, :listar_salas)
+    end
+  end
+
   defp gs_call(msg) do
     case rpc_target() do
       nil ->
-        GenServer.call(__MODULE__, msg)
+        gs_call_local(msg)
 
       n when n == node() ->
-        GenServer.call(__MODULE__, msg)
+        gs_call_local(msg)
 
       n ->
-        case :rpc.call(n, __MODULE__, :__local_gs_call__, [msg]) do
-          {:badrpc, reason} -> {:error, {:rpc, reason}}
+        rpc_gs_call(n, msg)
+    end
+  end
+
+  defp gs_call_local(msg) do
+    case GenServer.call(__MODULE__, msg) do
+      {:error, :sala_no_existe} = err ->
+        case buscar_en_cluster(msg) do
+          {:error, :sala_no_existe} -> err
           other -> other
         end
+
+      other ->
+        other
+    end
+  end
+
+  defp listar_salas_en_cluster do
+    nodos = [node() | Node.list()]
+
+    salas =
+      nodos
+      |> Enum.flat_map(fn n ->
+        case rpc_gs_call(n, :listar_salas) do
+          {:ok, xs} when is_list(xs) -> xs
+          _ -> []
+        end
+      end)
+      |> Enum.uniq_by(& &1.room_id)
+      |> Enum.sort_by(& &1.room_id)
+
+    {:ok, salas}
+  end
+
+  defp buscar_en_cluster(msg) do
+    Node.list()
+    |> Enum.find_value({:error, :sala_no_existe}, fn n ->
+      case rpc_gs_call(n, msg) do
+        {:error, :sala_no_existe} -> nil
+        {:badrpc, _} -> nil
+        result -> {:found, result}
+      end
+    end)
+    |> case do
+      {:found, r} -> r
+      err -> err
+    end
+  end
+
+  defp rpc_gs_call(n, msg) do
+    if n == node() do
+      GenServer.call(__MODULE__, msg)
+    else
+      case :rpc.call(n, __MODULE__, :__local_gs_call__, [msg]) do
+        {:badrpc, reason} -> {:error, {:rpc, reason}}
+        other -> other
+      end
     end
   end
 

@@ -10,13 +10,12 @@ defmodule PokemonBattle.GestorEntrenadores do
 
   alias PokemonBattle.Persistencia
 
-  @free_pack_count 1
-
   @doc """
   Inicia sesión con `usuario` y `clave`.
 
-  - Si el entrenador no existe, se auto-registra.
-  - Al registrarse se otorga `1` sobre gratis.
+  - Si el entrenador no existe, se auto-registra y recibe un sobre básico gratis
+    (ver `Persistencia` al crear el perfil).
+  - Devuelve `{:ok, entrenador, :registrado}` en el primer alta o `{:ok, entrenador, :existente}` si ya existía.
   """
   def iniciar(usuario, clave) do
     usuario = to_string(usuario)
@@ -24,28 +23,25 @@ defmodule PokemonBattle.GestorEntrenadores do
 
     case Persistencia.obtener_entrenador(usuario) do
       nil ->
-        # Registro automático.
         Persistencia.guardar_entrenador(usuario, %{
           "clave" => clave,
           "monedas" => 0,
           "monedas_acumuladas" => 0,
           "historial" => [],
           "inventario_pokemon_ids" => [],
-          "sobres_sin_abrir" => @free_pack_count,
-          "cola_sobres" => List.duplicate("sobre_basico", @free_pack_count),
           "equipos" => %{},
           "equipo_activo" => nil,
           "victorias" => 0,
           "derrotas" => 0
         })
 
-        {:ok, Persistencia.obtener_entrenador(usuario)}
+        {:ok, Persistencia.obtener_entrenador(usuario), :registrado}
 
       trainer ->
         stored_hash = trainer["clave_hash"]
 
         if Persistencia.verificar_clave?(clave, stored_hash) do
-          {:ok, trainer}
+          {:ok, trainer, :existente}
         else
           {:error, :clave_incorrecta}
         end

@@ -36,8 +36,8 @@ defmodule PokemonBattle.BatallaTest do
     u1 = nuevo_usuario("ana")
     u2 = nuevo_usuario("luis")
 
-    {:ok, _} = GestorEntrenadores.iniciar(u1, "1234")
-    {:ok, _} = GestorEntrenadores.iniciar(u2, "1234")
+    {:ok, _, _} = GestorEntrenadores.iniciar(u1, "1234")
+    {:ok, _, _} = GestorEntrenadores.iniciar(u2, "1234")
 
     # Alta velocidad vs baja velocidad
     id1 = crear_pokemon_instancia(u1, "pikachu", %{ataque: 50, defensa: 300, velocidad: 100}, ["impactrueno", "rayo", "Destructor", "Hiperrayo"])
@@ -65,8 +65,8 @@ defmodule PokemonBattle.BatallaTest do
     u1 = nuevo_usuario("victor")
     u2 = nuevo_usuario("perdedor")
 
-    {:ok, _} = GestorEntrenadores.iniciar(u1, "1234")
-    {:ok, _} = GestorEntrenadores.iniciar(u2, "1234")
+    {:ok, _, _} = GestorEntrenadores.iniciar(u1, "1234")
+    {:ok, _, _} = GestorEntrenadores.iniciar(u2, "1234")
 
     # Ajustamos monedas para test estable.
     {:ok, _} = Persistencia.ajustar_monedas(u1, 200)
@@ -101,7 +101,7 @@ defmodule PokemonBattle.BatallaTest do
     u2b = nuevo_usuario("p2b")
 
     for u <- [u1a, u1b, u2a, u2b] do
-      {:ok, _} = GestorEntrenadores.iniciar(u, "1234")
+      {:ok, _, _} = GestorEntrenadores.iniciar(u, "1234")
     end
 
     # Sala 1: u1a rápido, u1b lento

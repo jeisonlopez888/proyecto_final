@@ -27,8 +27,8 @@ defmodule PokemonBattle.IntercambioTest do
     u1 = nuevo_usuario("inter_a")
     u2 = nuevo_usuario("inter_b")
 
-    {:ok, _} = GestorEntrenadores.iniciar(u1, "1234")
-    {:ok, _} = GestorEntrenadores.iniciar(u2, "1234")
+    {:ok, _, _} = GestorEntrenadores.iniciar(u1, "1234")
+    {:ok, _, _} = GestorEntrenadores.iniciar(u2, "1234")
 
     id1 = crear_y_agregar_pokemon(u1, "pikachu", %{ataque: 50, defensa: 100, velocidad: 40}, ["impactrueno", "rayo", "Destructor", "Hiperrayo"])
     id2 = crear_y_agregar_pokemon(u2, "squirtle", %{ataque: 45, defensa: 100, velocidad: 20}, ["hidrobomba", "pistola_agua", "Destructor", "Hiperrayo"])

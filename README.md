@@ -131,36 +131,57 @@ Los **id de movimiento** deben coincidir **exactamente** con los que ves en `inv
 
 ---
 
-## Dos ventanas `iex` = dos nodos (cómo unirse a la misma sala)
+## Dos ventanas `iex` = batalla online entre terminales
 
-Cada ventana con `iex.bat -S mix` es un **nodo distinto**: la sala creada en una no existe en la otra.
+Al **iniciar sesión** (o crear entrenador), la app configura automáticamente:
 
-**Solución recomendada:** nombrar nodos, conectar y delegar el gestor de salas.
+- Nodo BEAM con el nombre del usuario (`ana` → `ana@127.0.0.1`, `luis` → `luis@127.0.0.1`; en Windows no uses `localhost`).
+- Cookie de cluster (`proyecto_pokemon`, configurable en `config/config.exs`).
+- Conexión con otros entrenadores registrados (`data/cluster_nodes.json`).
+- Búsqueda de salas en todos los nodos conectados (no hace falta `GESTOR_SALAS_NODE` a mano).
 
-**Terminal 1 (quien crea la sala):**
+### Arranque (recomendado)
 
-```powershell
-cd ruta\al\proyecto
-iex.bat --sname ana@localhost -S mix
-```
-
-**Terminal 2:**
+En **cada** terminal:
 
 ```powershell
 cd ruta\al\proyecto
-iex.bat --sname luis@localhost -S mix
+iex.bat -S mix
 ```
-
-En el **segundo** `iex`, **antes** de `unirse_sala`:
 
 ```elixir
-Node.connect(:"ana@localhost")
-System.put_env("GESTOR_SALAS_NODE", "ana@localhost")
+PokemonBattle.MenuJuego.iniciar()
 ```
 
-Luego cada uno hace `iniciar`, equipos, `unirse_sala` / `crear_sala` como corresponda. Las operaciones de salas del nodo `luis` se ejecutan por RPC en `ana`, donde está registrada la sala.
+| Terminal | Login | Qué verás tras entrar |
+|----------|-------|------------------------|
+| 1 | **ana** | `Nodo de red: :'ana@127.0.0.1' ...` |
+| 2 | **luis** | `Nodo de red: :'luis@127.0.0.1' ... Conectado a: ana@127.0.0.1` |
 
-*(Opcional: variable de entorno `CLUSTER_NODES` con nodos separados por coma; la app intenta conectar al arrancar vía `PokemonBattle.Cluster`.)*
+Luego: Terminal 1 → menú **5** → **1** (crear sala `S-xxxx`). Terminal 2 → menú **5** → **3** (unirse al mismo código).
+
+**Importante:** un IEx = un entrenador. Si ya entraste como **ana** en una ventana, no puedes cambiar a **luis** en la misma; abre otra terminal para el segundo jugador.
+
+Atajos con nombre de nodo ya fijado: `mix jugar.ana` / `mix jugar.luis` (opcional).
+
+### Errores frecuentes
+
+| Síntoma | Qué hacer |
+|---------|-----------|
+| No aparece línea `Nodo de red:` | Vuelve a iniciar sesión; comprueba que el usuario solo tenga letras, números o `_` |
+| `Conectado a:` vacío en la 2.ª terminal | Entra primero en Terminal 1 como **ana**, luego en Terminal 2 como **luis** |
+| Sala no existe | Mismo código `S-xxxx`; ambos con sesión iniciada y terminales abiertas |
+| Mismo entrenador en dos ventanas | Usa usuarios distintos (ana / luis) |
+
+**No** escribas comandos Elixir en el prompt `PS C:\...>`; solo dentro de `iex(...)>`.
+
+### Prueba automática del cluster
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\test_dos_nodos.ps1
+```
+
+*(Opcional: `CLUSTER_NODES` o `GESTOR_SALAS_NODE` siguen funcionando para forzar un gestor remoto.)*
 
 ---
 

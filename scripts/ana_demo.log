@@ -1,0 +1,16 @@
+Erlang/OTP 28 [erts-16.2] [source] [64-bit] [smp:4:4] [ds:4:4:10] [async-threads:1] [jit:ns]
+
+** (Mix) Mix only recognizes the options --help and --version.
+You may have wanted to invoke a task instead, such as "mix run"
+
+Usage: mix [task]
+
+Examples:
+
+    mix             - Invokes the default task (mix run) in a project
+    mix new PATH    - Creates a new Elixir project at the given path
+    mix help        - Lists all available tasks
+    mix help TASK   - Prints documentation for a given task
+
+The --help and --version options can be given instead of a task for usage and versioning information.
+

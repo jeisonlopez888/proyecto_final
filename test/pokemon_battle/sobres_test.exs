@@ -13,7 +13,7 @@ defmodule PokemonBattle.SobresTest do
     :rand.seed(:exsplus, {10, 20, 30})
 
     u = nuevo_usuario("sobres")
-    {:ok, _} = GestorEntrenadores.iniciar(u, "clave")
+    {:ok, _, :registrado} = GestorEntrenadores.iniciar(u, "clave")
 
     {:ok, %{pokemon_ids: ids}} = SistemaSobres.abrir_sobre(u, "ultimo")
     assert length(ids) == 3

@@ -32,6 +32,8 @@ defmodule PokemonBattle.Persistencia do
   @moves_file "moves.json"
   @tienda_file "tienda.json"
   @battles_log "battles.log"
+  @sobre_registro_gratis "sobre_basico"
+  @cantidad_sobres_registro 1
 
   # --- API pública: arranque y utilidades ---
 
@@ -282,6 +284,7 @@ defmodule PokemonBattle.Persistencia do
   def handle_call({:guardar_entrenador, usuario, attrs}, _from, state) do
     u = to_string(usuario)
     usuarios = get_in(state.trainers, ["usuarios"]) || %{}
+    es_nuevo = not Map.has_key?(usuarios, u)
     actual = Map.get(usuarios, u, entrenador_vacio())
 
     merged =
@@ -289,6 +292,7 @@ defmodule PokemonBattle.Persistencia do
       |> stringify_keys()
       |> maybe_hash_password()
       |> then(&Map.merge(actual, &1))
+      |> then(fn t -> if es_nuevo and sin_sobres_pendientes?(t), do: otorgar_sobre_registro(t), else: t end)
 
     nuevos_usuarios = Map.put(usuarios, u, merged)
     trainers = put_in(state.trainers, ["usuarios"], nuevos_usuarios)
@@ -641,11 +645,26 @@ defmodule PokemonBattle.Persistencia do
         cola
 
       n > 0 ->
-        List.duplicate("sobre_basico", n)
+        List.duplicate(@sobre_registro_gratis, n)
 
       true ->
         []
     end
+  end
+
+  defp sin_sobres_pendientes?(t) do
+    cola = t["cola_sobres"]
+    n = t["sobres_sin_abrir"] || 0
+
+    (not is_list(cola) or cola == []) and n <= 0
+  end
+
+  defp otorgar_sobre_registro(t) do
+    cola = (t["cola_sobres"] || []) ++ List.duplicate(@sobre_registro_gratis, @cantidad_sobres_registro)
+
+    t
+    |> Map.put("cola_sobres", cola)
+    |> Map.put("sobres_sin_abrir", length(cola))
   end
 
   defp ensure_entrenador(state, usuario) do
